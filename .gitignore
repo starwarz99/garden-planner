@@ -41,4 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
-prisma/migrations/
+# prisma/migrations/ — keep migrations tracked in git
+
+.vercel
+.env*.local
