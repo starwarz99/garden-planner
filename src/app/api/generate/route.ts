@@ -26,10 +26,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, design });
   } catch (error) {
-    console.error("Garden generation error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Generation failed" },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : "Generation failed";
+    const name = error instanceof Error ? error.constructor.name : "UnknownError";
+    console.error("Garden generation error:", name, message, error);
+    return NextResponse.json({ error: message, type: name }, { status: 500 });
   }
 }
