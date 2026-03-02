@@ -102,62 +102,53 @@ export async function generateGardenDesign(data: WizardData): Promise<GardenDesi
   const gridCols = Math.floor(data.widthFt / 2);
   const gridRows = Math.floor(data.lengthFt / 2);
 
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    const message = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 8192,
-      temperature: 0.2,
-      messages: [{ role: "user", content: prompt }],
-    });
+  const message = await anthropic.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 8192,
+    temperature: 0.2,
+    messages: [{ role: "user", content: prompt }],
+  });
 
-    if (message.stop_reason === "max_tokens") {
-      throw new Error("Garden is too large to generate — try a smaller size or fewer plants.");
-    }
-
-    const textBlock = message.content.find((b) => b.type === "text");
-    if (!textBlock || textBlock.type !== "text") {
-      if (attempt < 2) continue;
-      throw new Error("No text response from Claude — please try again.");
-    }
-
-    let raw = textBlock.text.trim();
-
-    // Strip markdown code fences if present
-    if (raw.startsWith("```")) {
-      raw = raw.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "").trim();
-    }
-
-    // If response doesn't look like JSON, retry once
-    if (!raw.startsWith("{")) {
-      if (attempt < 2) continue;
-      throw new Error("Garden generation failed — please try again with fewer plants.");
-    }
-
-    let design: GardenDesign;
-    try {
-      design = JSON.parse(raw);
-    } catch {
-      if (attempt < 2) continue;
-      throw new Error("Garden generation failed — please try again with fewer plants.");
-    }
-
-    if (!Array.isArray(design.grid) || design.grid.length === 0) {
-      if (attempt < 2) continue;
-      throw new Error("Invalid garden layout received — please try again.");
-    }
-
-    // Pad/trim grid to match expected dimensions
-    while (design.grid.length < gridRows) {
-      design.grid.push(new Array(gridCols).fill(null));
-    }
-    design.grid = design.grid.slice(0, gridRows).map((row) => {
-      if (!Array.isArray(row)) return new Array(gridCols).fill(null);
-      while (row.length < gridCols) row.push(null);
-      return row.slice(0, gridCols);
-    });
-
-    return design;
+  if (message.stop_reason === "max_tokens") {
+    throw new Error("Garden is too large to generate — try a smaller size or fewer plants.");
   }
 
-  throw new Error("Garden generation failed after retries — please try again.");
+  const textBlock = message.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new Error("No text response from Claude — please try again.");
+  }
+
+  let raw = textBlock.text.trim();
+
+  // Strip markdown code fences if present
+  if (raw.startsWith("```")) {
+    raw = raw.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "").trim();
+  }
+
+  if (!raw.startsWith("{")) {
+    throw new Error("Garden generation failed — please try again with fewer plants.");
+  }
+
+  let design: GardenDesign;
+  try {
+    design = JSON.parse(raw);
+  } catch {
+    throw new Error("Garden generation failed — please try again with fewer plants.");
+  }
+
+  if (!Array.isArray(design.grid) || design.grid.length === 0) {
+    throw new Error("Invalid garden layout received — please try again.");
+  }
+
+  // Pad/trim grid to match expected dimensions
+  while (design.grid.length < gridRows) {
+    design.grid.push(new Array(gridCols).fill(null));
+  }
+  design.grid = design.grid.slice(0, gridRows).map((row) => {
+    if (!Array.isArray(row)) return new Array(gridCols).fill(null);
+    while (row.length < gridCols) row.push(null);
+    return row.slice(0, gridCols);
+  });
+
+  return design;
 }

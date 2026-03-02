@@ -50,8 +50,12 @@ export function GardenWizard({ onComplete }: GardenWizardProps) {
       });
 
       if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error ?? "Generation failed");
+        let errorMsg = "Generation failed — please try again.";
+        try {
+          const err = await response.json();
+          if (err.error) errorMsg = err.error;
+        } catch {}
+        throw new Error(errorMsg);
       }
 
       const result = await response.json();

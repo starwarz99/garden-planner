@@ -48,8 +48,12 @@ export default function WizardResultPage() {
       });
 
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error);
+        let errorMsg = "Generation failed — please try again.";
+        try {
+          const err = await res.json();
+          if (err.error) errorMsg = err.error;
+        } catch {}
+        throw new Error(errorMsg);
       }
 
       const result = await res.json();
@@ -80,8 +84,12 @@ export default function WizardResultPage() {
       });
 
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error);
+        let errorMsg = "Save failed — please try again.";
+        try {
+          const err = await res.json();
+          if (err.error) errorMsg = err.error;
+        } catch {}
+        throw new Error(errorMsg);
       }
 
       const result = await res.json();
