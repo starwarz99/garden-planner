@@ -4,7 +4,7 @@ import { getZoneById } from "@/data/usda-zones";
 import { allPlants } from "@/data/plants";
 
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiKey: process.env.ANTHROPIC_API_KEY?.trim(),
 });
 
 function buildPrompt(data: WizardData): string {
