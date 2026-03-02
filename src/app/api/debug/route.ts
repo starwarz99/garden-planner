@@ -5,28 +5,55 @@ import Anthropic from "@anthropic-ai/sdk";
 export async function GET() {
   const results: Record<string, unknown> = {};
 
-  // 1. Check env vars are present (don't expose values)
-  results.hasAnthropicKey = !!process.env.ANTHROPIC_API_KEY;
+  // 1. Check env vars are present
+  const apiKey = process.env.ANTHROPIC_API_KEY ?? "";
+  results.hasAnthropicKey = !!apiKey;
+  results.keyPrefix = apiKey ? apiKey.slice(0, 12) + "..." : "missing";
+  results.keyHasWhitespace = apiKey !== apiKey.trim();
   results.hasDirectUrl = !!process.env.DIRECT_URL;
   results.hasDatabaseUrl = !!process.env.DATABASE_URL;
   results.hasAuthSecret = !!process.env.AUTH_SECRET;
 
-  // 2. Test Anthropic API
+  // 2. Test raw fetch (no SDK) to Anthropic API
   try {
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey.trim(),
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 10,
+        messages: [{ role: "user", content: "say ok" }],
+      }),
+    });
+    const data = await res.json() as Record<string, unknown>;
+    results.rawFetch = res.ok ? "ok" : "http_error";
+    results.rawFetchStatus = res.status;
+    if (!res.ok) results.rawFetchBody = data;
+  } catch (e) {
+    results.rawFetch = "error";
+    results.rawFetchError = e instanceof Error ? `${e.constructor.name}: ${e.message}` : String(e);
+  }
+
+  // 3. Test Anthropic SDK
+  try {
+    const client = new Anthropic({ apiKey: apiKey.trim() });
     const msg = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 10,
       messages: [{ role: "user", content: "say ok" }],
     });
-    results.anthropic = "ok";
+    results.anthropicSdk = "ok";
     results.anthropicModel = msg.model;
   } catch (e) {
-    results.anthropic = "error";
-    results.anthropicError = e instanceof Error ? `${e.constructor.name}: ${e.message}` : String(e);
+    results.anthropicSdk = "error";
+    results.anthropicSdkError = e instanceof Error ? `${e.constructor.name}: ${e.message}` : String(e);
   }
 
-  // 3. Test Prisma/DB
+  // 4. Test Prisma/DB
   try {
     const { prisma } = await import("@/lib/prisma");
     await prisma.$queryRaw`SELECT 1`;
