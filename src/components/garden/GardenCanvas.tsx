@@ -40,10 +40,9 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
   }, []);
 
   return (
-    <div className="relative overflow-auto rounded-2xl border-2 border-sage/30 bg-white shadow-inner">
+    <div className="relative rounded-2xl border-2 border-sage/30 bg-white shadow-inner">
       <svg
-        width={svgWidth}
-        height={svgHeight}
+        width="100%"
         viewBox={`0 0 ${svgWidth} ${svgHeight}`}
         className="block"
         id="garden-canvas-svg"

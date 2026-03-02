@@ -31,10 +31,13 @@ export function useWizard() {
     setData((prev) => ({ ...prev, [key]: value }));
   }, []);
 
+  const scrollTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
   const next = useCallback(() => {
     if (currentStep < TOTAL_STEPS) {
       setDirection("forward");
       setCurrentStep((s) => s + 1);
+      scrollTop();
     }
   }, [currentStep]);
 
@@ -42,12 +45,14 @@ export function useWizard() {
     if (currentStep > 1) {
       setDirection("back");
       setCurrentStep((s) => s - 1);
+      scrollTop();
     }
   }, [currentStep]);
 
   const goToStep = useCallback((step: number) => {
     setDirection(step > currentStep ? "forward" : "back");
     setCurrentStep(step);
+    scrollTop();
   }, [currentStep]);
 
   const reset = useCallback(() => {
