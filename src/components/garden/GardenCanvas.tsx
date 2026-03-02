@@ -215,12 +215,19 @@ function CompassRoseSVG({ x, y, orientation }: { x: number; y: number; orientati
 
   return (
     <g transform={`translate(${x}, ${y})`}>
-      <circle r={22} fill="white" stroke="#cbd5e1" strokeWidth={1} />
+      <circle r={22} fill="white" stroke="#94a3b8" strokeWidth={1.5} />
       <g transform={`rotate(${rotation})`}>
-        <path d="M0,-18 L4,0 L0,6 L-4,0 Z" fill="#2d6a4f" />
-        <path d="M0,18 L4,0 L0,-6 L-4,0 Z" fill="#94a3b8" />
+        {/* North arrow — green */}
+        <path d="M0,-19 L5,2 L0,9 L-5,2 Z" fill="#2d6a4f" />
+        {/* South arrow — grey */}
+        <path d="M0,19 L5,-2 L0,-9 L-5,-2 Z" fill="#94a3b8" />
+        {/* Centre pin */}
+        <circle r={3} fill="white" stroke="#64748b" strokeWidth={1} />
+        {/* N label rotates with needle — sits just above north tip */}
+        <text x={0} y={-26} textAnchor="middle" fontSize={11} fontWeight="bold" fill="#2d6a4f">N</text>
+        {/* S label rotates with needle — sits just below south tip */}
+        <text x={0} y={33} textAnchor="middle" fontSize={11} fontWeight="bold" fill="#64748b">S</text>
       </g>
-      <text y={-5} textAnchor="middle" fontSize={8} fontWeight="bold" fill="#1e293b">N</text>
     </g>
   );
 }

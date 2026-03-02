@@ -19,7 +19,7 @@ export const herbs: Plant[] = [
   {
     id: "parsley",
     name: "Parsley",
-    emoji: "🌿",
+    emoji: "🌱",
     spacingFt: 0.5,
     minZone: 3,
     maxZone: 10,
@@ -34,7 +34,7 @@ export const herbs: Plant[] = [
   {
     id: "cilantro",
     name: "Cilantro",
-    emoji: "🌿",
+    emoji: "🍃",
     spacingFt: 0.5,
     minZone: 2,
     maxZone: 11,
@@ -49,7 +49,7 @@ export const herbs: Plant[] = [
   {
     id: "dill",
     name: "Dill",
-    emoji: "🌿",
+    emoji: "🌾",
     spacingFt: 0.5,
     minZone: 2,
     maxZone: 11,
@@ -64,7 +64,7 @@ export const herbs: Plant[] = [
   {
     id: "mint",
     name: "Mint",
-    emoji: "🌿",
+    emoji: "🍵",
     spacingFt: 1,
     minZone: 3,
     maxZone: 11,
@@ -79,7 +79,7 @@ export const herbs: Plant[] = [
   {
     id: "rosemary",
     name: "Rosemary",
-    emoji: "🌿",
+    emoji: "🌲",
     spacingFt: 2,
     minZone: 6,
     maxZone: 11,
@@ -95,7 +95,7 @@ export const herbs: Plant[] = [
   {
     id: "thyme",
     name: "Thyme",
-    emoji: "🌿",
+    emoji: "🍀",
     spacingFt: 1,
     minZone: 4,
     maxZone: 11,
@@ -111,7 +111,7 @@ export const herbs: Plant[] = [
   {
     id: "oregano",
     name: "Oregano",
-    emoji: "🌿",
+    emoji: "🫖",
     spacingFt: 1,
     minZone: 4,
     maxZone: 10,
@@ -126,7 +126,7 @@ export const herbs: Plant[] = [
   {
     id: "sage",
     name: "Sage",
-    emoji: "🌿",
+    emoji: "🪴",
     spacingFt: 1.5,
     minZone: 4,
     maxZone: 10,
@@ -141,7 +141,7 @@ export const herbs: Plant[] = [
   {
     id: "chive",
     name: "Chive",
-    emoji: "🌿",
+    emoji: "🌷",
     spacingFt: 0.5,
     minZone: 3,
     maxZone: 10,
@@ -187,7 +187,7 @@ export const herbs: Plant[] = [
   {
     id: "lemon-balm",
     name: "Lemon Balm",
-    emoji: "🌿",
+    emoji: "🍋",
     spacingFt: 1.5,
     minZone: 3,
     maxZone: 10,
@@ -202,7 +202,7 @@ export const herbs: Plant[] = [
   {
     id: "tarragon",
     name: "Tarragon",
-    emoji: "🌿",
+    emoji: "🌳",
     spacingFt: 1,
     minZone: 4,
     maxZone: 8,
@@ -232,7 +232,7 @@ export const herbs: Plant[] = [
   {
     id: "fennel-herb",
     name: "Fennel (Herb)",
-    emoji: "🌿",
+    emoji: "🫚",
     spacingFt: 1.5,
     minZone: 4,
     maxZone: 10,
@@ -262,7 +262,7 @@ export const herbs: Plant[] = [
   {
     id: "lemongrass",
     name: "Lemongrass",
-    emoji: "🌿",
+    emoji: "🎋",
     spacingFt: 2,
     minZone: 9,
     maxZone: 13,
@@ -277,7 +277,7 @@ export const herbs: Plant[] = [
   {
     id: "stevia",
     name: "Stevia",
-    emoji: "🌿",
+    emoji: "🍬",
     spacingFt: 0.75,
     minZone: 8,
     maxZone: 11,
@@ -292,7 +292,7 @@ export const herbs: Plant[] = [
   {
     id: "echinacea",
     name: "Echinacea",
-    emoji: "🌸",
+    emoji: "🪻",
     spacingFt: 1.5,
     minZone: 3,
     maxZone: 9,

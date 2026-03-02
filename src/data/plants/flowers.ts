@@ -19,7 +19,7 @@ export const flowers: Plant[] = [
   {
     id: "nasturtium",
     name: "Nasturtium",
-    emoji: "🌸",
+    emoji: "🧡",
     spacingFt: 1,
     minZone: 2,
     maxZone: 13,
@@ -140,7 +140,7 @@ export const flowers: Plant[] = [
   {
     id: "echinacea-flower",
     name: "Echinacea",
-    emoji: "🌸",
+    emoji: "🪻",
     spacingFt: 1.5,
     minZone: 3,
     maxZone: 9,
@@ -245,7 +245,7 @@ export const flowers: Plant[] = [
   {
     id: "dahlia",
     name: "Dahlia",
-    emoji: "🌺",
+    emoji: "💐",
     spacingFt: 2,
     minZone: 8,
     maxZone: 11,
@@ -291,7 +291,7 @@ export const flowers: Plant[] = [
   {
     id: "salvia",
     name: "Salvia",
-    emoji: "💜",
+    emoji: "🩷",
     spacingFt: 1,
     minZone: 4,
     maxZone: 11,

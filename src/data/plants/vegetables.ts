@@ -64,7 +64,7 @@ export const vegetables: Plant[] = [
   {
     id: "spinach",
     name: "Spinach",
-    emoji: "🌿",
+    emoji: "🍃",
     spacingFt: 0.5,
     minZone: 3,
     maxZone: 9,
@@ -94,7 +94,7 @@ export const vegetables: Plant[] = [
   {
     id: "zucchini",
     name: "Zucchini",
-    emoji: "🥦",
+    emoji: "🫛",
     spacingFt: 3,
     minZone: 4,
     maxZone: 11,
@@ -109,7 +109,7 @@ export const vegetables: Plant[] = [
   {
     id: "kale",
     name: "Kale",
-    emoji: "🥦",
+    emoji: "🍀",
     spacingFt: 1.5,
     minZone: 2,
     maxZone: 10,
@@ -259,7 +259,7 @@ export const vegetables: Plant[] = [
   {
     id: "radish",
     name: "Radish",
-    emoji: "🌱",
+    emoji: "🌸",
     spacingFt: 0.25,
     minZone: 2,
     maxZone: 10,
@@ -289,7 +289,7 @@ export const vegetables: Plant[] = [
   {
     id: "beet",
     name: "Beet",
-    emoji: "🫀",
+    emoji: "🫐",
     spacingFt: 0.5,
     minZone: 2,
     maxZone: 10,
@@ -304,7 +304,7 @@ export const vegetables: Plant[] = [
   {
     id: "cauliflower",
     name: "Cauliflower",
-    emoji: "🥦",
+    emoji: "🌼",
     spacingFt: 2,
     minZone: 3,
     maxZone: 10,
@@ -334,7 +334,7 @@ export const vegetables: Plant[] = [
   {
     id: "celery",
     name: "Celery",
-    emoji: "🥬",
+    emoji: "🌾",
     spacingFt: 0.75,
     minZone: 4,
     maxZone: 9,
@@ -349,7 +349,7 @@ export const vegetables: Plant[] = [
   {
     id: "leek",
     name: "Leek",
-    emoji: "🌿",
+    emoji: "🎋",
     spacingFt: 0.5,
     minZone: 3,
     maxZone: 9,
@@ -364,7 +364,7 @@ export const vegetables: Plant[] = [
   {
     id: "arugula",
     name: "Arugula",
-    emoji: "🌿",
+    emoji: "💚",
     spacingFt: 0.5,
     minZone: 3,
     maxZone: 11,
@@ -394,7 +394,7 @@ export const vegetables: Plant[] = [
   {
     id: "turnip",
     name: "Turnip",
-    emoji: "🌱",
+    emoji: "🌰",
     spacingFt: 0.5,
     minZone: 2,
     maxZone: 9,
@@ -409,7 +409,7 @@ export const vegetables: Plant[] = [
   {
     id: "parsnip",
     name: "Parsnip",
-    emoji: "🌱",
+    emoji: "🥕",
     spacingFt: 0.5,
     minZone: 2,
     maxZone: 9,
@@ -439,7 +439,7 @@ export const vegetables: Plant[] = [
   {
     id: "asparagus",
     name: "Asparagus",
-    emoji: "🌿",
+    emoji: "🪴",
     spacingFt: 1.5,
     minZone: 3,
     maxZone: 8,
@@ -454,7 +454,7 @@ export const vegetables: Plant[] = [
   {
     id: "artichoke",
     name: "Artichoke",
-    emoji: "🌿",
+    emoji: "🪷",
     spacingFt: 4,
     minZone: 7,
     maxZone: 11,
@@ -469,7 +469,7 @@ export const vegetables: Plant[] = [
   {
     id: "kohlrabi",
     name: "Kohlrabi",
-    emoji: "🌱",
+    emoji: "🌵",
     spacingFt: 0.75,
     minZone: 3,
     maxZone: 10,
@@ -484,7 +484,7 @@ export const vegetables: Plant[] = [
   {
     id: "okra",
     name: "Okra",
-    emoji: "🌿",
+    emoji: "🌺",
     spacingFt: 1.5,
     minZone: 7,
     maxZone: 13,
@@ -559,7 +559,7 @@ export const vegetables: Plant[] = [
   {
     id: "brussels-sprouts",
     name: "Brussels Sprouts",
-    emoji: "🥦",
+    emoji: "💚",
     spacingFt: 2,
     minZone: 3,
     maxZone: 9,
@@ -574,7 +574,7 @@ export const vegetables: Plant[] = [
   {
     id: "fennel",
     name: "Fennel",
-    emoji: "🌿",
+    emoji: "🫚",
     spacingFt: 1,
     minZone: 4,
     maxZone: 10,
