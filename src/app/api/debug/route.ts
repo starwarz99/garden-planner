@@ -57,7 +57,9 @@ export async function GET() {
   // 4. Test Stripe connectivity
   results.hasStripeKey = !!process.env.STRIPE_SECRET_KEY;
   try {
-    const s = new Stripe(process.env.STRIPE_SECRET_KEY ?? "");
+    const s = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
+      httpClient: Stripe.createFetchHttpClient(),
+    });
     const products = await s.products.list({ limit: 1 });
     results.stripe = "ok";
     results.stripeProducts = products.data.length;

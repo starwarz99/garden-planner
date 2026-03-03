@@ -1,9 +1,12 @@
 import Stripe from "stripe";
 
-// Stripe client — null when key is not yet configured
-// No explicit apiVersion — the SDK uses its own built-in default
+// Stripe client — null when key is not yet configured.
+// Force the fetch-based HTTP client so Stripe works in Vercel's serverless
+// environment, which restricts Node.js native http/https socket connections.
 export const stripe: Stripe | null = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY)
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      httpClient: Stripe.createFetchHttpClient(),
+    })
   : null;
 
 // Price IDs — set these in env after creating products in the Stripe dashboard
