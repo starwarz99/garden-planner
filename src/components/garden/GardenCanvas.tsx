@@ -2,7 +2,14 @@
 
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import type { GardenDesign, PlantCell } from "@/types/garden";
+import type { GardenDesign, PlantCell, PathCell } from "@/types/garden";
+
+function isPathCell(cell: PlantCell | PathCell | null): cell is PathCell {
+  return cell !== null && "isPath" in cell;
+}
+function isPlantCell(cell: PlantCell | PathCell | null): cell is PlantCell {
+  return cell !== null && "plantId" in cell;
+}
 
 const CELL_SIZE = 60;
 const PADDING = 40;
@@ -50,21 +57,35 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
         {/* Background */}
         <rect width={svgWidth} height={svgHeight} fill="#f8fdf8" />
 
-        {/* Zone color fills */}
+        {/* Path cells + zone color fills */}
         {design.grid.map((row, rowIdx) =>
           row.map((cell, colIdx) => {
-            if (!cell) return null;
-            return (
-              <rect
-                key={`zone-${rowIdx}-${colIdx}`}
-                x={PADDING + colIdx * CELL_SIZE}
-                y={PADDING + rowIdx * CELL_SIZE}
-                width={CELL_SIZE}
-                height={CELL_SIZE}
-                fill={cell.zoneColor}
-                fillOpacity={0.25}
-              />
-            );
+            const x = PADDING + colIdx * CELL_SIZE;
+            const y = PADDING + rowIdx * CELL_SIZE;
+            if (isPathCell(cell)) {
+              const pathColor =
+                cell.pathStyle === "straight" ? "#c8a96e" :
+                cell.pathStyle === "curved"   ? "#b89a60" :
+                                                "#a08878"; // stepping-stones
+              return (
+                <g key={`path-${rowIdx}-${colIdx}`}>
+                  <rect x={x} y={y} width={CELL_SIZE} height={CELL_SIZE}
+                    fill={pathColor} fillOpacity={0.55} />
+                  {/* subtle dotted texture */}
+                  <circle cx={x + CELL_SIZE / 2} cy={y + CELL_SIZE / 2}
+                    r={cell.pathStyle === "stepping-stones" ? 18 : 4}
+                    fill={pathColor} fillOpacity={cell.pathStyle === "stepping-stones" ? 0.4 : 0.3} />
+                </g>
+              );
+            }
+            if (isPlantCell(cell)) {
+              return (
+                <rect key={`zone-${rowIdx}-${colIdx}`}
+                  x={x} y={y} width={CELL_SIZE} height={CELL_SIZE}
+                  fill={cell.zoneColor} fillOpacity={0.25} />
+              );
+            }
+            return null;
           })
         )}
 
@@ -104,43 +125,31 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
           rx={4}
         />
 
-        {/* Plant emojis */}
+        {/* Plant emojis (skip path cells) */}
         {design.grid.map((row, rowIdx) =>
           row.map((cell, colIdx) => {
-            if (!cell) return null;
+            if (!isPlantCell(cell)) return null;
             const cx = PADDING + colIdx * CELL_SIZE + CELL_SIZE / 2;
             const cy = PADDING + rowIdx * CELL_SIZE + CELL_SIZE / 2;
 
             return (
               <g key={`plant-${rowIdx}-${colIdx}`}>
                 {/* Zone color dot */}
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r={CELL_SIZE / 2 - 4}
-                  fill={cell.zoneColor}
-                  fillOpacity={0.15}
-                  stroke={cell.zoneColor}
-                  strokeWidth={1}
-                  strokeOpacity={0.4}
+                <circle cx={cx} cy={cy} r={CELL_SIZE / 2 - 4}
+                  fill={cell.zoneColor} fillOpacity={0.15}
+                  stroke={cell.zoneColor} strokeWidth={1} strokeOpacity={0.4}
                 />
                 {/* Plant emoji */}
-                <text
-                  x={cx}
-                  y={cy + 8}
-                  textAnchor="middle"
-                  fontSize={CELL_SIZE * 0.5}
-                  className="select-none"
+                <text x={cx} y={cy + 8} textAnchor="middle"
+                  fontSize={CELL_SIZE * 0.5} className="select-none"
                   style={{ userSelect: "none" }}
                 >
                   {cell.emoji}
                 </text>
                 {/* Invisible hit area for hover */}
                 <rect
-                  x={PADDING + colIdx * CELL_SIZE}
-                  y={PADDING + rowIdx * CELL_SIZE}
-                  width={CELL_SIZE}
-                  height={CELL_SIZE}
+                  x={PADDING + colIdx * CELL_SIZE} y={PADDING + rowIdx * CELL_SIZE}
+                  width={CELL_SIZE} height={CELL_SIZE}
                   fill="transparent"
                   onMouseEnter={() => handleMouseEnter(cell, colIdx, rowIdx)}
                   onMouseLeave={handleMouseLeave}

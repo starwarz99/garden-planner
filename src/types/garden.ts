@@ -6,6 +6,7 @@ export type SoilType = "loamy" | "sandy" | "clay" | "raised-bed";
 export type SunExposure = "full-sun" | "partial-sun" | "partial-shade" | "full-shade";
 export type Orientation = "north" | "south" | "east" | "west";
 export type GardenStyle = "cottage" | "formal" | "kitchen" | "wildflower";
+export type WalkwayStyle = "none" | "straight" | "curved" | "stepping-stones";
 export type ExperienceLevel = "beginner" | "intermediate" | "expert";
 export type WaterPreference = "low" | "moderate" | "high";
 export type GardenGoal =
@@ -56,6 +57,8 @@ export interface WizardData {
   orientation: Orientation;
   // Step 5
   style: GardenStyle;
+  walkwayStyle: WalkwayStyle;
+  walkwayWidth: 2 | 4; // feet (2ft = 1 cell, 4ft = 2 cells)
   // Step 6
   selectedVegetables: string[];
   // Step 7
@@ -82,6 +85,11 @@ export interface PlantCell {
   note?: string;
 }
 
+export interface PathCell {
+  isPath: true;
+  pathStyle: WalkwayStyle;
+}
+
 export interface GardenZone {
   name: string;
   color: string;
@@ -89,7 +97,7 @@ export interface GardenZone {
 }
 
 export interface GardenDesign {
-  grid: (PlantCell | null)[][];   // [row][col], each cell = 2ft × 2ft
+  grid: (PlantCell | PathCell | null)[][];   // [row][col], each cell = 2ft × 2ft
   zones: GardenZone[];
   companionNotes: string[];
   zoneTips: string[];

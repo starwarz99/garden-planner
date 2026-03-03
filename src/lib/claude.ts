@@ -34,6 +34,7 @@ function buildPrompt(data: WizardData): string {
 - **Sun exposure**: ${data.sunExposure}
 - **Garden orientation**: ${data.orientation}-facing
 - **Garden style**: ${data.style}
+- **Walkways**: ${data.walkwayStyle === "none" ? "no dedicated walkways" : `${data.walkwayStyle} paths, ${data.walkwayWidth}ft wide (= ${data.walkwayWidth / 2} cell${data.walkwayWidth === 4 ? "s" : ""} wide)`}
 - **Experience level**: ${data.experience}
 - **Water preference**: ${data.waterPref}
 - **Goals**: ${data.goals.length > 0 ? data.goals.join(", ") : "general garden"}
@@ -53,7 +54,18 @@ ${selectedPlantDetails || "No specific plants requested — choose the best plan
     data.style === "kitchen" ? "efficient rows, herbs at edges, veggies in center, easy access paths" :
     "natural drifts, natives prioritized, irregular clusters, wildlife corridors"
   }
-7. Leave ~20% cells empty (null) for pathways and air circulation.
+7. ${data.walkwayStyle === "none"
+    ? "Leave ~20% cells as null for air circulation. No dedicated path cells needed."
+    : `Place walkways as PathCell objects: {"isPath":true,"pathStyle":"${data.walkwayStyle}"}. Rules:
+   - Path width: ${data.walkwayWidth / 2} cell(s) wide (${data.walkwayWidth}ft).
+   - ${data.walkwayStyle === "straight"
+       ? `Run straight paths horizontally and/or vertically to divide the garden into accessible beds. Every planting area should be reachable from a path. ${data.style === "formal" ? "Use a symmetrical cross pattern (one central horizontal + one vertical path)." : "Use an efficient L or T layout."}`
+       : data.walkwayStyle === "curved"
+       ? "Create a gently winding path that meanders through the garden. Approximate curves by staggering path cells diagonally — shift 1 cell left or right every 2–3 rows."
+       : "Scatter individual stepping-stone cells (single PathCells) in a natural stepping pattern, spaced 1–2 cells apart, forming a clear walking route through the garden."
+     }
+   - No plant should be more than 4 cells from a path cell.`
+  }
 8. Prioritize plants that fit the zone ${data.usdaZone} — exclude any that won't survive.
 
 ## Response Format
@@ -61,7 +73,7 @@ Respond with ONLY valid JSON (no markdown code blocks, no extra text):
 
 {
   "grid": [
-    [{"plantId":"tomato","plantName":"Tomato","emoji":"🍅","zoneColor":"#4ade80","note":"Anchor plant"}, null, ...],
+    [{"plantId":"tomato","plantName":"Tomato","emoji":"🍅","zoneColor":"#4ade80","note":"Anchor plant"}, {"isPath":true,"pathStyle":"straight"}, null, ...],
     ...
   ],
   "zones": [

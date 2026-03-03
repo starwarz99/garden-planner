@@ -8,6 +8,8 @@ export const wizardDataSchema = z.object({
   sunExposure: z.enum(["full-sun", "partial-sun", "partial-shade", "full-shade"]),
   orientation: z.enum(["north", "south", "east", "west"]),
   style: z.enum(["cottage", "formal", "kitchen", "wildflower"]),
+  walkwayStyle: z.enum(["none", "straight", "curved", "stepping-stones"]),
+  walkwayWidth: z.union([z.literal(2), z.literal(4)]),
   selectedVegetables: z.array(z.string()),
   selectedHerbs: z.array(z.string()),
   selectedFlowers: z.array(z.string()),

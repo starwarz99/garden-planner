@@ -13,6 +13,8 @@ const defaultWizardData: WizardData = {
   sunExposure: "full-sun",
   orientation: "south",
   style: "kitchen",
+  walkwayStyle: "straight",
+  walkwayWidth: 2,
   selectedVegetables: [],
   selectedHerbs: [],
   selectedFlowers: [],

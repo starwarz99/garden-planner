@@ -1,6 +1,10 @@
 "use client";
 
-import type { GardenDesign } from "@/types/garden";
+import type { GardenDesign, PlantCell, PathCell } from "@/types/garden";
+
+function isPlantCell(cell: PlantCell | PathCell | null): cell is PlantCell {
+  return cell !== null && "plantId" in cell;
+}
 
 interface GardenLegendProps {
   design: GardenDesign;
@@ -11,7 +15,7 @@ export function GardenLegend({ design }: GardenLegendProps) {
   const plantMap = new Map<string, { name: string; emoji: string; zoneColor: string; count: number }>();
   design.grid.forEach((row) =>
     row.forEach((cell) => {
-      if (!cell) return;
+      if (!isPlantCell(cell)) return;
       const existing = plantMap.get(cell.plantId);
       if (existing) {
         existing.count++;
