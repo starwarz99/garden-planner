@@ -21,6 +21,11 @@ export function Step7Herbs({ data, updateData }: StepProps) {
         selected={data.selectedHerbs}
         onChange={(ids) => updateData("selectedHerbs", ids)}
         label="Herbs"
+        userZone={data.usdaZone}
+        quantities={data.herbQuantities}
+        onQuantityChange={(id, qty) =>
+          updateData("herbQuantities", { ...data.herbQuantities, [id]: qty })
+        }
       />
     </div>
   );

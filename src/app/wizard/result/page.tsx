@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GardenCanvas } from "@/components/garden/GardenCanvas";
 import { GardenLegend } from "@/components/garden/GardenLegend";
@@ -17,6 +17,16 @@ export default function WizardResultPage() {
   const [savedId, setSavedId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const diagramRef = useRef<HTMLDivElement>(null);
+  const [diagramHeight, setDiagramHeight] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    const el = diagramRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => setDiagramHeight(entry.contentRect.height));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     const storedDesign = sessionStorage.getItem("gardenDesign");
@@ -152,8 +162,8 @@ export default function WizardResultPage() {
         )}
 
         {/* Main layout: canvas + legend */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3">
+        <div className="grid grid-cols-1 lg:grid-cols-[70%_30%] gap-6 items-start">
+          <div ref={diagramRef}>
             <GardenCanvas
               design={design}
               widthFt={wizardData.widthFt}
@@ -161,8 +171,8 @@ export default function WizardResultPage() {
               orientation={wizardData.orientation}
             />
           </div>
-          <div className="lg:col-span-1">
-            <div className="card sticky top-4 max-h-[80vh] overflow-y-auto">
+          <div style={{ height: diagramHeight ?? "auto" }} className="card overflow-hidden">
+            <div className="h-full overflow-y-auto">
               <GardenLegend design={design} />
             </div>
           </div>

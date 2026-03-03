@@ -1,6 +1,6 @@
 "use client";
 
-import type { WizardData } from "@/types/garden";
+import type { WizardData, PlantQuantity } from "@/types/garden";
 import { getZoneById } from "@/data/usda-zones";
 import { allPlants } from "@/data/plants";
 
@@ -13,6 +13,12 @@ interface StepProps {
 
 export function Step10Review({ data, updateData, onGenerate, isGenerating }: StepProps) {
   const zone = getZoneById(data.usdaZone);
+  const allQuantities: Record<string, PlantQuantity> = {
+    ...data.vegetableQuantities,
+    ...data.herbQuantities,
+    ...data.flowerQuantities,
+  };
+
   const allSelectedPlants = [
     ...data.selectedVegetables,
     ...data.selectedHerbs,
@@ -64,11 +70,21 @@ export function Step10Review({ data, updateData, onGenerate, isGenerating }: Ste
           <p className="text-sm text-gray-500 italic">No specific plants selected — Claude will choose the best ones for your zone and style.</p>
         ) : (
           <div className="flex flex-wrap gap-1.5">
-            {allSelectedPlants.map((plant) => plant && (
-              <span key={plant.id} className="inline-flex items-center gap-1 px-2 py-0.5 bg-mint rounded-full text-xs text-gray-700">
-                {plant.emoji} {plant.name}
-              </span>
-            ))}
+            {allSelectedPlants.map((plant) => {
+              if (!plant) return null;
+              const qty = allQuantities[plant.id] ?? "medium";
+              return (
+                <span key={plant.id} className="inline-flex items-center gap-1 px-2 py-0.5 bg-mint rounded-full text-xs text-gray-700">
+                  {plant.emoji} {plant.name}
+                  {qty === "more" && (
+                    <span className="ml-0.5 px-1 py-px bg-green-100 text-green-700 rounded-full text-[9px] font-semibold">more</span>
+                  )}
+                  {qty === "less" && (
+                    <span className="ml-0.5 px-1 py-px bg-blue-100 text-blue-600 rounded-full text-[9px] font-semibold">less</span>
+                  )}
+                </span>
+              );
+            })}
           </div>
         )}
       </div>

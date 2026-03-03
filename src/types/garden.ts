@@ -2,6 +2,7 @@
 // Wizard input types
 // ─────────────────────────────────────────────
 
+export type PlantQuantity = "less" | "medium" | "more";
 export type SoilType = "loamy" | "sandy" | "clay" | "raised-bed";
 export type SunExposure = "full-sun" | "partial-sun" | "partial-shade" | "full-shade";
 export type Orientation = "north" | "south" | "east" | "west";
@@ -61,10 +62,13 @@ export interface WizardData {
   walkwayWidth: 2 | 4; // feet (2ft = 1 cell, 4ft = 2 cells)
   // Step 6
   selectedVegetables: string[];
+  vegetableQuantities: Record<string, PlantQuantity>;
   // Step 7
   selectedHerbs: string[];
+  herbQuantities: Record<string, PlantQuantity>;
   // Step 8
   selectedFlowers: string[];
+  flowerQuantities: Record<string, PlantQuantity>;
   // Step 9
   goals: GardenGoal[];
   experience: ExperienceLevel;

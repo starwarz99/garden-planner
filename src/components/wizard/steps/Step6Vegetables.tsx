@@ -21,6 +21,11 @@ export function Step6Vegetables({ data, updateData }: StepProps) {
         selected={data.selectedVegetables}
         onChange={(ids) => updateData("selectedVegetables", ids)}
         label="Vegetables"
+        userZone={data.usdaZone}
+        quantities={data.vegetableQuantities}
+        onQuantityChange={(id, qty) =>
+          updateData("vegetableQuantities", { ...data.vegetableQuantities, [id]: qty })
+        }
       />
     </div>
   );

@@ -18,10 +18,25 @@ function buildPrompt(data: WizardData): string {
     ...data.selectedFlowers,
   ];
 
+  const allQuantities: Record<string, string> = {
+    ...data.vegetableQuantities,
+    ...data.herbQuantities,
+    ...data.flowerQuantities,
+  };
+
+  const quantityHint: Record<string, string> = {
+    less:   "LESS — minimal, 1–2 cells only",
+    medium: "MEDIUM — standard amount",
+    more:   "MORE — prioritize, use as many cells as spacing allows",
+  };
+
   const selectedPlantDetails = allSelected
     .map((id) => allPlants.find((p) => p.id === id))
     .filter(Boolean)
-    .map((p) => `  - ${p!.emoji} ${p!.name} (${p!.category}, ${p!.spacingFt}ft spacing, zones ${p!.minZone}-${p!.maxZone}, water: ${p!.waterNeeds})`)
+    .map((p) => {
+      const qty = allQuantities[p!.id] ?? "medium";
+      return `  - ${p!.emoji} ${p!.name} (${p!.category}, ${p!.spacingFt}ft spacing, zones ${p!.minZone}-${p!.maxZone}, water: ${p!.waterNeeds}) [${quantityHint[qty]}]`;
+    })
     .join("\n");
 
   return `You are an expert garden designer with deep knowledge of companion planting, USDA hardiness zones, and sustainable growing practices. Design an intelligent, optimized garden layout.
@@ -67,6 +82,7 @@ ${selectedPlantDetails || "No specific plants requested — choose the best plan
    - No plant should be more than 4 cells from a path cell.`
   }
 8. Prioritize plants that fit the zone ${data.usdaZone} — exclude any that won't survive.
+9. Respect quantity preferences: LESS plants get 1–2 cells total; MEDIUM plants get a proportional share; MORE plants should fill as many cells as their spacing allows — they are the garden's dominant plants.
 
 ## Response Format
 Respond with ONLY valid JSON (no markdown code blocks, no extra text):

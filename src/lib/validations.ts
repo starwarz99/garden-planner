@@ -11,8 +11,11 @@ export const wizardDataSchema = z.object({
   walkwayStyle: z.enum(["none", "straight", "curved", "stepping-stones"]),
   walkwayWidth: z.union([z.literal(2), z.literal(4)]),
   selectedVegetables: z.array(z.string()),
+  vegetableQuantities: z.record(z.enum(["less", "medium", "more"])).optional().default({}),
   selectedHerbs: z.array(z.string()),
+  herbQuantities: z.record(z.enum(["less", "medium", "more"])).optional().default({}),
   selectedFlowers: z.array(z.string()),
+  flowerQuantities: z.record(z.enum(["less", "medium", "more"])).optional().default({}),
   goals: z.array(
     z.enum([
       "maximize-yield",

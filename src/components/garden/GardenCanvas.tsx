@@ -10,8 +10,8 @@ function isPlantCell(cell: PlantCell | PathCell | null): cell is PlantCell {
   return cell !== null && "plantId" in cell;
 }
 
-const CELL_SIZE = 60;
-const PADDING = 40;
+const CELL_SIZE = 44;
+const PADDING = 32;
 
 // Returns the cardinal letter for each side of the diagram given the garden orientation.
 // orientation = direction the garden faces (where the sun comes from).
@@ -89,7 +89,7 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
                     fill={pathColor} fillOpacity={0.55} />
                   {/* subtle dotted texture */}
                   <circle cx={x + CELL_SIZE / 2} cy={y + CELL_SIZE / 2}
-                    r={cell.pathStyle === "stepping-stones" ? 18 : 4}
+                    r={cell.pathStyle === "stepping-stones" ? 13 : 3}
                     fill={pathColor} fillOpacity={cell.pathStyle === "stepping-stones" ? 0.4 : 0.3} />
                 </g>
               );
@@ -156,7 +156,7 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
                   stroke={cell.zoneColor} strokeWidth={1} strokeOpacity={0.4}
                 />
                 {/* Plant emoji */}
-                <text x={cx} y={cy + 8} textAnchor="middle"
+                <text x={cx} y={cy + 6} textAnchor="middle"
                   fontSize={CELL_SIZE * 0.5} className="select-none"
                   style={{ userSelect: "none" }}
                 >
@@ -179,35 +179,35 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
         {/* Cardinal direction labels + dimensions around the border */}
 
         {/* Top — cardinal */}
-        <text x={midX} y={PADDING - 10} textAnchor="middle"
-          fontSize={13} fontWeight="bold" fill="#2d6a4f">
+        <text x={midX} y={PADDING - 8} textAnchor="middle"
+          fontSize={10} fontWeight="bold" fill="#2d6a4f">
           {labels.top}
         </text>
 
         {/* Bottom — cardinal + width dimension */}
-        <text x={midX} y={gridBottom + 16} textAnchor="middle"
-          fontSize={13} fontWeight="bold" fill="#2d6a4f">
+        <text x={midX} y={gridBottom + 13} textAnchor="middle"
+          fontSize={10} fontWeight="bold" fill="#2d6a4f">
           {labels.bottom}
         </text>
-        <text x={midX} y={gridBottom + 30} textAnchor="middle"
-          fontSize={10} fill="#64748b">
+        <text x={midX} y={gridBottom + 24} textAnchor="middle"
+          fontSize={8} fill="#64748b">
           {widthFt} ft
         </text>
 
         {/* Left — length dimension (further left) then cardinal (closer to grid) */}
-        <text x={10} y={midY} textAnchor="middle"
-          fontSize={10} fill="#64748b"
-          transform={`rotate(-90, 10, ${midY})`}>
+        <text x={8} y={midY} textAnchor="middle"
+          fontSize={8} fill="#64748b"
+          transform={`rotate(-90, 8, ${midY})`}>
           {lengthFt} ft
         </text>
-        <text x={28} y={midY + 4} textAnchor="middle"
-          fontSize={13} fontWeight="bold" fill="#2d6a4f">
+        <text x={22} y={midY + 3} textAnchor="middle"
+          fontSize={10} fontWeight="bold" fill="#2d6a4f">
           {labels.left}
         </text>
 
         {/* Right — cardinal only */}
-        <text x={gridRight + 16} y={midY + 4} textAnchor="middle"
-          fontSize={13} fontWeight="bold" fill="#2d6a4f">
+        <text x={gridRight + 13} y={midY + 3} textAnchor="middle"
+          fontSize={10} fontWeight="bold" fill="#2d6a4f">
           {labels.right}
         </text>
 

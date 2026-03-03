@@ -1,22 +1,53 @@
 "use client";
 
 import { useState } from "react";
-import type { Plant } from "@/types/garden";
+import type { Plant, PlantQuantity } from "@/types/garden";
+import { getZoneNumber } from "@/data/usda-zones";
 
 interface PlantPickerProps {
   plants: Plant[];
   selected: string[];
   onChange: (ids: string[]) => void;
   label: string;
+  userZone?: string;
+  quantities?: Record<string, PlantQuantity>;
+  onQuantityChange?: (id: string, quantity: PlantQuantity) => void;
 }
 
-export function PlantPicker({ plants, selected, onChange, label }: PlantPickerProps) {
+const QUANTITY_STEPS: PlantQuantity[] = ["less", "medium", "more"];
+
+const quantityLabel: Record<PlantQuantity, string> = {
+  less:   "less",
+  medium: "med",
+  more:   "more",
+};
+
+export function PlantPicker({
+  plants,
+  selected,
+  onChange,
+  label,
+  userZone,
+  quantities = {},
+  onQuantityChange,
+}: PlantPickerProps) {
   const [search, setSearch] = useState("");
 
-  const filtered = plants.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.description.toLowerCase().includes(search.toLowerCase())
+  const userZoneNum = userZone ? getZoneNumber(userZone) : null;
+
+  const isCompatible = (plant: Plant) =>
+    userZoneNum === null ||
+    (userZoneNum >= plant.minZone && userZoneNum <= plant.maxZone);
+
+  const filtered = plants.filter(
+    (p) =>
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.description.toLowerCase().includes(search.toLowerCase())
   );
+
+  const compatible   = filtered.filter(isCompatible);
+  const incompatible = filtered.filter((p) => !isCompatible(p));
+  const showDivider  = userZoneNum !== null && compatible.length > 0 && incompatible.length > 0;
 
   const toggle = (id: string) => {
     if (selected.includes(id)) {
@@ -26,8 +57,65 @@ export function PlantPicker({ plants, selected, onChange, label }: PlantPickerPr
     }
   };
 
+  const stepQuantity = (e: React.MouseEvent, id: string, direction: 1 | -1) => {
+    e.stopPropagation();
+    const current = quantities[id] ?? "medium";
+    const idx = QUANTITY_STEPS.indexOf(current);
+    const next = QUANTITY_STEPS[Math.max(0, Math.min(2, idx + direction))];
+    onQuantityChange?.(id, next);
+  };
+
   const selectAll = () => onChange(plants.map((p) => p.id));
-  const clearAll = () => onChange([]);
+  const clearAll  = () => onChange([]);
+
+  const renderPlant = (plant: Plant) => {
+    const isSelected = selected.includes(plant.id);
+    const qty = quantities[plant.id] ?? "medium";
+
+    return (
+      <button
+        key={plant.id}
+        onClick={() => toggle(plant.id)}
+        title={plant.description}
+        className={`
+          flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 text-center
+          transition-all duration-150
+          ${isSelected
+            ? "bg-primary text-white border-primary shadow-md"
+            : "border-sage/30 hover:border-primary hover:bg-mint text-gray-700"
+          }
+        `}
+      >
+        <span className="text-2xl">{plant.emoji}</span>
+        <span className="text-[10px] font-medium leading-tight">{plant.name}</span>
+
+        {isSelected && (
+          <div
+            className="flex items-center gap-0.5 mt-0.5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={(e) => stepQuantity(e, plant.id, -1)}
+              disabled={qty === "less"}
+              className="w-4 h-4 flex items-center justify-center rounded text-white/80 hover:text-white hover:bg-white/20 disabled:opacity-30 text-xs leading-none transition-colors"
+            >
+              −
+            </button>
+            <span className="text-[9px] font-semibold w-6 text-center text-white/90">
+              {quantityLabel[qty]}
+            </span>
+            <button
+              onClick={(e) => stepQuantity(e, plant.id, 1)}
+              disabled={qty === "more"}
+              className="w-4 h-4 flex items-center justify-center rounded text-white/80 hover:text-white hover:bg-white/20 disabled:opacity-30 text-xs leading-none transition-colors"
+            >
+              +
+            </button>
+          </div>
+        )}
+      </button>
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -58,50 +146,33 @@ export function PlantPicker({ plants, selected, onChange, label }: PlantPickerPr
         </div>
       </div>
 
-      {selected.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {selected.map((id) => {
-            const plant = plants.find((p) => p.id === id);
-            if (!plant) return null;
-            return (
-              <button
-                key={id}
-                onClick={() => toggle(id)}
-                className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary text-xs rounded-full border border-primary/30 hover:bg-red-50 hover:text-red-500 hover:border-red-300 transition-colors"
-              >
-                {plant.emoji} {plant.name} ×
-              </button>
-            );
-          })}
+      <div className="max-h-72 overflow-y-auto pr-1 space-y-3">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+          {compatible.map(renderPlant)}
         </div>
-      )}
 
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 max-h-72 overflow-y-auto pr-1">
-        {filtered.map((plant) => {
-          const isSelected = selected.includes(plant.id);
-          return (
-            <button
-              key={plant.id}
-              onClick={() => toggle(plant.id)}
-              title={plant.description}
-              className={`
-                flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 text-center
-                transition-all duration-150
-                ${isSelected
-                  ? "bg-primary text-white border-primary shadow-md scale-105"
-                  : "border-sage/30 hover:border-primary hover:bg-mint text-gray-700"
-                }
-              `}
-            >
-              <span className="text-2xl">{plant.emoji}</span>
-              <span className="text-[10px] font-medium leading-tight">{plant.name}</span>
-            </button>
-          );
-        })}
+        {showDivider && (
+          <div className="flex items-center gap-3 py-1">
+            <div className="flex-1 border-t-2 border-dashed border-amber-300" />
+            <span className="text-xs text-amber-600 font-medium whitespace-nowrap">
+              Not ideal for Zone {userZone}
+            </span>
+            <div className="flex-1 border-t-2 border-dashed border-amber-300" />
+          </div>
+        )}
+
+        {incompatible.length > 0 && (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 opacity-60">
+            {incompatible.map(renderPlant)}
+          </div>
+        )}
       </div>
 
       <div className="text-xs text-center text-gray-500">
         {selected.length} of {plants.length} {label.toLowerCase()} selected
+        {selected.length > 0 && (
+          <span className="ml-2 text-gray-400">· tap − / + on a card to adjust amount</span>
+        )}
       </div>
     </div>
   );

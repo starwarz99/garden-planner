@@ -1,8 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
-import { GardenCanvas } from "@/components/garden/GardenCanvas";
-import { GardenLegend } from "@/components/garden/GardenLegend";
+import { GardenLayout } from "./GardenLayout";
 import { CareCalendar } from "@/components/garden/CareCalendar";
 import Link from "next/link";
 import type { GardenDesign } from "@/types/garden";
@@ -52,21 +51,12 @@ export default async function GardenPage({ params }: Props) {
         </div>
 
         {/* Canvas + Legend */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3">
-            <GardenCanvas
-              design={design}
-              widthFt={garden.widthFt}
-              lengthFt={garden.lengthFt}
-              orientation={garden.orientation}
-            />
-          </div>
-          <div className="lg:col-span-1">
-            <div className="card sticky top-4 max-h-[80vh] overflow-y-auto">
-              <GardenLegend design={design} />
-            </div>
-          </div>
-        </div>
+        <GardenLayout
+          design={design}
+          widthFt={garden.widthFt}
+          lengthFt={garden.lengthFt}
+          orientation={garden.orientation}
+        />
 
         {/* Care Calendar */}
         <div className="mt-8 card">
