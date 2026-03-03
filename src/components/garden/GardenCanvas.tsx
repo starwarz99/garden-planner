@@ -194,15 +194,15 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
           {widthFt} ft
         </text>
 
-        {/* Left — cardinal + length dimension (both rotated) */}
-        <text x={8} y={midY + 4} textAnchor="middle"
+        {/* Left — length dimension (further left) then cardinal (closer to grid) */}
+        <text x={10} y={midY} textAnchor="middle"
+          fontSize={10} fill="#64748b"
+          transform={`rotate(-90, 10, ${midY})`}>
+          {lengthFt} ft
+        </text>
+        <text x={28} y={midY + 4} textAnchor="middle"
           fontSize={13} fontWeight="bold" fill="#2d6a4f">
           {labels.left}
-        </text>
-        <text x={26} y={midY} textAnchor="middle"
-          fontSize={10} fill="#64748b"
-          transform={`rotate(-90, 26, ${midY})`}>
-          {lengthFt} ft
         </text>
 
         {/* Right — cardinal only */}
