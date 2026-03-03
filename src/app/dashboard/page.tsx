@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { DashboardClient } from "./DashboardClient";
+import { getPlanConfig } from "@/lib/plans";
 
 export const metadata = { title: "My Gardens — Garden Planner" };
 
@@ -27,5 +28,14 @@ export default async function DashboardPage() {
     },
   });
 
-  return <DashboardClient initialGardens={gardens} userName={session.user.name ?? "Gardener"} />;
+  const planConfig = getPlanConfig(session.user.plan ?? "seedling");
+
+  return (
+    <DashboardClient
+      initialGardens={gardens}
+      userName={session.user.name ?? "Gardener"}
+      maxGardens={planConfig.maxGardens}
+      planName={planConfig.name}
+    />
+  );
 }

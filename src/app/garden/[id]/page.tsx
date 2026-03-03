@@ -24,6 +24,8 @@ export default async function GardenPage({ params }: Props) {
 
   const design = garden.designJson as unknown as GardenDesign;
   const planConfig = getPlanConfig(session.user.plan ?? "seedling");
+  const gardenCount = await prisma.garden.count({ where: { userId: session.user.id } });
+  const atLimit = gardenCount >= planConfig.maxGardens;
 
   return (
     <div className="min-h-screen bg-mint/20">
@@ -44,12 +46,21 @@ export default async function GardenPage({ params }: Props) {
               <span className="capitalize">{garden.style.replace("-", " ")} style</span>
             </p>
           </div>
-          <Link
-            href="/wizard"
-            className="px-4 py-2 bg-harvest text-primary font-bold rounded-xl hover:bg-harvest/90 transition-colors"
-          >
-            🌻 New Garden
-          </Link>
+          {atLimit ? (
+            <Link
+              href="/account"
+              className="px-4 py-2 bg-gray-100 text-gray-500 font-bold rounded-xl border-2 border-dashed border-gray-300 hover:border-primary hover:text-primary transition-colors text-sm"
+            >
+              🔒 Upgrade to add more
+            </Link>
+          ) : (
+            <Link
+              href="/wizard"
+              className="px-4 py-2 bg-harvest text-primary font-bold rounded-xl hover:bg-harvest/90 transition-colors"
+            >
+              🌻 New Garden
+            </Link>
+          )}
         </div>
 
         {/* Canvas + Legend */}

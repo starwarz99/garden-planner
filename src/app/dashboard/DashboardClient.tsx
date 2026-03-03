@@ -22,9 +22,11 @@ interface Garden {
 interface Props {
   initialGardens: Garden[];
   userName: string;
+  maxGardens: number;
+  planName: string;
 }
 
-export function DashboardClient({ initialGardens, userName }: Props) {
+export function DashboardClient({ initialGardens, userName, maxGardens, planName }: Props) {
   const [gardens, setGardens] = useState(
     initialGardens.map((g) => ({
       ...g,
@@ -51,12 +53,26 @@ export function DashboardClient({ initialGardens, userName }: Props) {
                 : `${gardens.length} garden${gardens.length !== 1 ? "s" : ""} saved`}
             </p>
           </div>
-          <Link
-            href="/wizard"
-            className="px-6 py-3 bg-harvest text-primary font-bold rounded-xl hover:bg-harvest/90 shadow-md hover:shadow-lg transition-all flex items-center gap-2"
-          >
-            <span>🌻</span> New Garden
-          </Link>
+          {gardens.length < maxGardens ? (
+            <Link
+              href="/wizard"
+              className="px-6 py-3 bg-harvest text-primary font-bold rounded-xl hover:bg-harvest/90 shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+            >
+              <span>🌻</span> New Garden
+            </Link>
+          ) : (
+            <div className="text-right">
+              <div className="text-xs text-gray-500 mb-1">
+                {planName} plan — {maxGardens}/{maxGardens} garden{maxGardens !== 1 ? "s" : ""} used
+              </div>
+              <Link
+                href="/account"
+                className="px-6 py-3 bg-gray-100 text-gray-500 font-bold rounded-xl border-2 border-dashed border-gray-300 hover:border-primary hover:text-primary transition-all flex items-center gap-2 text-sm"
+              >
+                🔒 Upgrade to add more
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Empty state */}
