@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { motion } from "framer-motion";
 import type { GardenDesign, PlantCell, PathCell } from "@/types/garden";
 
 function isPathCell(cell: PlantCell | PathCell | null): cell is PathCell {
@@ -13,6 +12,17 @@ function isPlantCell(cell: PlantCell | PathCell | null): cell is PlantCell {
 
 const CELL_SIZE = 60;
 const PADDING = 40;
+
+// Returns the cardinal letter for each side of the diagram given the garden orientation.
+// orientation = direction the garden faces (where the sun comes from).
+// The compass needle rotation maps:
+//   south→N at top, west→N at right, north→N at bottom, east→N at left
+const CARDINAL_LABELS: Record<string, { top: string; bottom: string; left: string; right: string }> = {
+  south: { top: "N", bottom: "S", left: "W", right: "E" },
+  north: { top: "S", bottom: "N", left: "E", right: "W" },
+  east:  { top: "E", bottom: "W", left: "N", right: "S" },
+  west:  { top: "W", bottom: "E", left: "S", right: "N" },
+};
 
 interface GardenCanvasProps {
   design: GardenDesign;
@@ -46,12 +56,14 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
     setTooltip(null);
   }, []);
 
+  const labels = CARDINAL_LABELS[orientation] ?? CARDINAL_LABELS.south;
+  const midX = PADDING + (gridCols * CELL_SIZE) / 2;
+  const midY = PADDING + (gridRows * CELL_SIZE) / 2;
+  const gridRight = PADDING + gridCols * CELL_SIZE;
+  const gridBottom = PADDING + gridRows * CELL_SIZE;
+
   return (
     <div className="relative rounded-2xl border-2 border-sage/30 bg-white shadow-inner">
-      {/* Compass rose — outside the grid, anchored to top-right corner of the card */}
-      <div className="absolute -top-7 right-2">
-        <CompassRose orientation={orientation} />
-      </div>
       <svg
         width="100%"
         viewBox={`0 0 ${svgWidth} ${svgHeight}`}
@@ -164,14 +176,39 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
           })
         )}
 
-        {/* Axis labels */}
-        <text x={PADDING - 8} y={PADDING + gridRows * CELL_SIZE / 2} textAnchor="middle"
-          fontSize={10} fill="#64748b" transform={`rotate(-90, ${PADDING - 20}, ${PADDING + gridRows * CELL_SIZE / 2})`}>
+        {/* Cardinal direction labels + dimensions around the border */}
+
+        {/* Top — cardinal */}
+        <text x={midX} y={PADDING - 10} textAnchor="middle"
+          fontSize={13} fontWeight="bold" fill="#2d6a4f">
+          {labels.top}
+        </text>
+
+        {/* Bottom — cardinal + width dimension */}
+        <text x={midX} y={gridBottom + 16} textAnchor="middle"
+          fontSize={13} fontWeight="bold" fill="#2d6a4f">
+          {labels.bottom}
+        </text>
+        <text x={midX} y={gridBottom + 30} textAnchor="middle"
+          fontSize={10} fill="#64748b">
+          {widthFt} ft
+        </text>
+
+        {/* Left — cardinal + length dimension (both rotated) */}
+        <text x={8} y={midY + 4} textAnchor="middle"
+          fontSize={13} fontWeight="bold" fill="#2d6a4f">
+          {labels.left}
+        </text>
+        <text x={26} y={midY} textAnchor="middle"
+          fontSize={10} fill="#64748b"
+          transform={`rotate(-90, 26, ${midY})`}>
           {lengthFt} ft
         </text>
-        <text x={PADDING + gridCols * CELL_SIZE / 2} y={PADDING + gridRows * CELL_SIZE + 20}
-          textAnchor="middle" fontSize={10} fill="#64748b">
-          {widthFt} ft
+
+        {/* Right — cardinal only */}
+        <text x={gridRight + 16} y={midY + 4} textAnchor="middle"
+          fontSize={13} fontWeight="bold" fill="#2d6a4f">
+          {labels.right}
         </text>
 
         {/* Tooltip */}
@@ -210,49 +247,6 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
           </g>
         )}
       </svg>
-    </div>
-  );
-}
-
-function CompassRose({ orientation }: { orientation: string }) {
-  const [label, setLabel] = useState<string | null>(null);
-  const rotation = orientation === "south" ? 0 : orientation === "west" ? 90 :
-    orientation === "north" ? 180 : 270;
-
-  return (
-    <div className="relative">
-      <svg width={54} height={54} viewBox="-27 -27 54 54">
-        {/* Compass ring */}
-        <circle r={22} fill="white" stroke="#94a3b8" strokeWidth={1.5} />
-        {/* Small dot markers at cardinal points on the ring (fixed, don't rotate) */}
-        {[0, 90, 180, 270].map((a) => (
-          <circle
-            key={a}
-            cx={Math.round(21 * Math.sin((a * Math.PI) / 180))}
-            cy={Math.round(-21 * Math.cos((a * Math.PI) / 180))}
-            r={1.5}
-            fill="#94a3b8"
-          />
-        ))}
-        <g transform={`rotate(${rotation})`}>
-          {/* North half — long green diamond */}
-          <path d="M0,-21 L6,0 L0,0 L-6,0 Z" fill="#2d6a4f" />
-          {/* South half — short grey diamond */}
-          <path d="M0,13 L5,0 L0,0 L-5,0 Z" fill="#cbd5e1" />
-          {/* Centre pin */}
-          <circle r={3} fill="white" stroke="#64748b" strokeWidth={1} />
-          {/* Invisible hit areas — rotate with needle so hover always matches the right half */}
-          <rect x={-8} y={-22} width={16} height={22} fill="transparent" className="cursor-help"
-            onMouseEnter={() => setLabel("North")} onMouseLeave={() => setLabel(null)} />
-          <rect x={-7} y={0} width={14} height={14} fill="transparent" className="cursor-help"
-            onMouseEnter={() => setLabel("South")} onMouseLeave={() => setLabel(null)} />
-        </g>
-      </svg>
-      {label && (
-        <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-0.5 text-xs font-semibold bg-white border border-gray-200 rounded shadow text-primary whitespace-nowrap pointer-events-none z-10">
-          {label}
-        </div>
-      )}
     </div>
   );
 }
