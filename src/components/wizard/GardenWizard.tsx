@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useWizard } from "@/hooks/useWizard";
 import { WizardProgress } from "./WizardProgress";
@@ -15,6 +16,7 @@ import { Step8Flowers } from "./steps/Step8Flowers";
 import { Step9Goals } from "./steps/Step9Goals";
 import { Step10Review } from "./steps/Step10Review";
 import type { GardenDesign, WizardData } from "@/types/garden";
+import { getPlanConfig } from "@/lib/plans";
 
 interface GardenWizardProps {
   onComplete: (design: GardenDesign, wizardData: WizardData) => Promise<void>;
@@ -38,6 +40,8 @@ export function GardenWizard({ onComplete, initialData }: GardenWizardProps) {
   const { currentStep, totalSteps, data, direction, next, back, goToStep, updateData } = wizard;
   const [isGenerating, setIsGenerating] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
+  const { data: session } = useSession();
+  const planConfig = getPlanConfig(session?.user?.plan ?? "seedling");
 
   const handleGenerate = async () => {
     setIsGenerating(true);
@@ -75,9 +79,9 @@ export function GardenWizard({ onComplete, initialData }: GardenWizardProps) {
       case 3: return <Step3Soil {...props} />;
       case 4: return <Step4Sun {...props} />;
       case 5: return <Step5Style {...props} />;
-      case 6: return <Step6Vegetables {...props} />;
-      case 7: return <Step7Herbs {...props} />;
-      case 8: return <Step8Flowers {...props} />;
+      case 6: return <Step6Vegetables {...props} canAdjustQuantity={planConfig.canAdjustQuantity} />;
+      case 7: return <Step7Herbs {...props} canAdjustQuantity={planConfig.canAdjustQuantity} />;
+      case 8: return <Step8Flowers {...props} canAdjustQuantity={planConfig.canAdjustQuantity} />;
       case 9: return <Step9Goals {...props} />;
       case 10: return (
         <Step10Review

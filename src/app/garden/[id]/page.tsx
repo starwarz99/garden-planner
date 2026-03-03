@@ -5,6 +5,7 @@ import { GardenLayout } from "./GardenLayout";
 import { CareCalendar } from "@/components/garden/CareCalendar";
 import Link from "next/link";
 import type { GardenDesign } from "@/types/garden";
+import { getPlanConfig } from "@/lib/plans";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -22,6 +23,7 @@ export default async function GardenPage({ params }: Props) {
   if (!garden) notFound();
 
   const design = garden.designJson as unknown as GardenDesign;
+  const planConfig = getPlanConfig(session.user.plan ?? "seedling");
 
   return (
     <div className="min-h-screen bg-mint/20">
@@ -56,12 +58,23 @@ export default async function GardenPage({ params }: Props) {
           widthFt={garden.widthFt}
           lengthFt={garden.lengthFt}
           orientation={garden.orientation}
+          showYield={planConfig.canSeeYield}
         />
 
-        {/* Care Calendar */}
-        <div className="mt-8 card">
-          <CareCalendar design={design} />
-        </div>
+        {/* Care Calendar — Harvest plan only */}
+        {planConfig.canSeeCareCalendar ? (
+          <div className="mt-8 card">
+            <CareCalendar design={design} />
+          </div>
+        ) : (
+          <div className="mt-8 card bg-gray-50 text-center py-8">
+            <div className="text-2xl mb-2">📅</div>
+            <div className="font-semibold text-gray-700">12-Month Care Calendar</div>
+            <div className="text-sm text-gray-500 mt-1">
+              Upgrade to <span className="text-primary font-semibold">Harvest</span> to unlock the full year-round care schedule.
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

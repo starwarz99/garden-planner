@@ -7,9 +7,10 @@ import type { WizardData } from "@/types/garden";
 interface StepProps {
   data: WizardData;
   updateData: <K extends keyof WizardData>(key: K, value: WizardData[K]) => void;
+  canAdjustQuantity?: boolean;
 }
 
-export function Step8Flowers({ data, updateData }: StepProps) {
+export function Step8Flowers({ data, updateData, canAdjustQuantity = true }: StepProps) {
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -26,6 +27,7 @@ export function Step8Flowers({ data, updateData }: StepProps) {
         onQuantityChange={(id, qty) =>
           updateData("flowerQuantities", { ...data.flowerQuantities, [id]: qty })
         }
+        canAdjustQuantity={canAdjustQuantity}
       />
     </div>
   );

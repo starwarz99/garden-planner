@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { getPlanConfig } from "@/lib/plans";
 
 function generateSlug(name: string): string {
   const base = name
@@ -50,6 +51,20 @@ export async function POST(req: Request) {
 
     if (!name || !wizardData || !designJson) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    // Enforce per-plan garden limit
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { plan: true },
+    });
+    const planConfig = getPlanConfig(dbUser?.plan ?? "seedling");
+    const gardenCount = await prisma.garden.count({ where: { userId: session.user.id } });
+    if (gardenCount >= planConfig.maxGardens) {
+      return NextResponse.json(
+        { error: `Your ${planConfig.name} plan allows up to ${planConfig.maxGardens} saved garden${planConfig.maxGardens === 1 ? "" : "s"}. Upgrade to save more.` },
+        { status: 403 }
+      );
     }
 
     const slug = generateSlug(name);

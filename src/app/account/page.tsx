@@ -17,6 +17,7 @@ export default async function AccountPage() {
       email: true,
       image: true,
       createdAt: true,
+      plan: true,
       zipCode: true,
       usdaZone: true,
       soilType: true,

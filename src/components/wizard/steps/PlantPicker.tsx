@@ -12,6 +12,7 @@ interface PlantPickerProps {
   userZone?: string;
   quantities?: Record<string, PlantQuantity>;
   onQuantityChange?: (id: string, quantity: PlantQuantity) => void;
+  canAdjustQuantity?: boolean;
 }
 
 const QUANTITY_STEPS: PlantQuantity[] = ["less", "medium", "more"];
@@ -30,6 +31,7 @@ export function PlantPicker({
   userZone,
   quantities = {},
   onQuantityChange,
+  canAdjustQuantity = true,
 }: PlantPickerProps) {
   const [search, setSearch] = useState("");
 
@@ -89,7 +91,7 @@ export function PlantPicker({
         <span className="text-2xl">{plant.emoji}</span>
         <span className="text-[10px] font-medium leading-tight">{plant.name}</span>
 
-        {isSelected && (
+        {isSelected && canAdjustQuantity && (
           <div
             className="flex items-center gap-0.5 mt-0.5"
             onClick={(e) => e.stopPropagation()}
@@ -170,8 +172,11 @@ export function PlantPicker({
 
       <div className="text-xs text-center text-gray-500">
         {selected.length} of {plants.length} {label.toLowerCase()} selected
-        {selected.length > 0 && (
+        {selected.length > 0 && canAdjustQuantity && (
           <span className="ml-2 text-gray-400">· tap − / + on a card to adjust amount</span>
+        )}
+        {selected.length > 0 && !canAdjustQuantity && (
+          <span className="ml-2 text-amber-500">· upgrade to 🌿 Grower to adjust amounts</span>
         )}
       </div>
     </div>

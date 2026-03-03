@@ -8,9 +8,10 @@ function isPlantCell(cell: PlantCell | PathCell | null): cell is PlantCell {
 
 interface GardenLegendProps {
   design: GardenDesign;
+  showYield?: boolean;
 }
 
-export function GardenLegend({ design }: GardenLegendProps) {
+export function GardenLegend({ design, showYield = true }: GardenLegendProps) {
   // Collect unique plants from grid
   const plantMap = new Map<string, { name: string; emoji: string; zoneColor: string; count: number }>();
   design.grid.forEach((row) =>
@@ -107,11 +108,16 @@ export function GardenLegend({ design }: GardenLegendProps) {
         </div>
       )}
 
-      {/* Estimated yield */}
-      {design.estimatedYield && (
+      {/* Estimated yield — Grower/Harvest only */}
+      {showYield && design.estimatedYield && (
         <div className="card bg-harvest/10 border-harvest/30">
           <div className="font-semibold text-sm text-gray-800 mb-1">🏆 Estimated Yield</div>
           <p className="text-xs text-gray-600">{design.estimatedYield}</p>
+        </div>
+      )}
+      {!showYield && (
+        <div className="card bg-gray-50 border-gray-200 text-center">
+          <div className="text-sm font-medium text-gray-500">🌿 Upgrade to Grower to see estimated yield</div>
         </div>
       )}
     </div>

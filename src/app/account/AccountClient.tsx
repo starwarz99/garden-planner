@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { usdaZones } from "@/data/usda-zones";
 import type { GardenGoal } from "@/types/garden";
+import { getPlanConfig } from "@/lib/plans";
 
 interface UserData {
   id: string;
@@ -10,6 +11,7 @@ interface UserData {
   email: string | null;
   image: string | null;
   createdAt: Date;
+  plan: string;
   zipCode: string | null;
   usdaZone: string | null;
   soilType: string | null;
@@ -36,6 +38,7 @@ const goalOptions: Array<{ id: GardenGoal; label: string }> = [
 ];
 
 export function AccountClient({ user }: AccountClientProps) {
+  const planConfig = getPlanConfig(user.plan);
   const [form, setForm] = useState({
     name:        user.name ?? "",
     zipCode:     user.zipCode ?? "",
@@ -118,7 +121,12 @@ export function AccountClient({ user }: AccountClientProps) {
               </div>
             )}
             <div>
-              <p className="font-semibold text-gray-900">{form.name || "—"}</p>
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-gray-900">{form.name || "—"}</p>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary">
+                  {planConfig.emoji} {planConfig.name}
+                </span>
+              </div>
               <p className="text-sm text-gray-500">{user.email}</p>
               <p className="text-xs text-gray-400 mt-0.5">
                 Member since {new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
@@ -150,10 +158,25 @@ export function AccountClient({ user }: AccountClientProps) {
 
         {/* Garden preferences section */}
         <div className="card space-y-5">
-          <h2 className="text-lg font-semibold text-gray-800">Garden Preferences</h2>
-          <p className="text-sm text-gray-500 -mt-3">
-            These defaults pre-fill the wizard whenever you start a new garden.
-          </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800">Garden Preferences</h2>
+              <p className="text-sm text-gray-500 mt-0.5">
+                These defaults pre-fill the wizard whenever you start a new garden.
+              </p>
+            </div>
+            {!planConfig.canSavePreferences && (
+              <span className="flex-shrink-0 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded-lg">
+                🌿 Grower feature
+              </span>
+            )}
+          </div>
+
+          {!planConfig.canSavePreferences && (
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+              Upgrade to <strong>🌿 Grower</strong> to save your garden preferences and have the wizard pre-filled automatically every time.
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -301,8 +324,8 @@ export function AccountClient({ user }: AccountClientProps) {
           <div className="pt-2">
             <button
               onClick={handleSave}
-              disabled={status === "saving"}
-              className="px-8 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 disabled:opacity-50 transition-colors"
+              disabled={status === "saving" || !planConfig.canSavePreferences}
+              className="px-8 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {status === "saving" ? "Saving…" : "Save Preferences"}
             </button>

@@ -10,9 +10,10 @@ interface GardenLayoutProps {
   widthFt: number;
   lengthFt: number;
   orientation: string;
+  showYield?: boolean;
 }
 
-export function GardenLayout({ design, widthFt, lengthFt, orientation }: GardenLayoutProps) {
+export function GardenLayout({ design, widthFt, lengthFt, orientation, showYield = true }: GardenLayoutProps) {
   const diagramRef = useRef<HTMLDivElement>(null);
   const [diagramHeight, setDiagramHeight] = useState<number | undefined>(undefined);
 
@@ -36,7 +37,7 @@ export function GardenLayout({ design, widthFt, lengthFt, orientation }: GardenL
       </div>
       <div style={{ height: diagramHeight ?? "auto" }} className="card overflow-hidden">
         <div className="h-full overflow-y-auto">
-          <GardenLegend design={design} />
+          <GardenLegend design={design} showYield={showYield} />
         </div>
       </div>
     </div>
