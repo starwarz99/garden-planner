@@ -222,18 +222,25 @@ function CompassRoseSVG({ x, y, orientation }: { x: number; y: number; orientati
 
   return (
     <g transform={`translate(${x}, ${y})`}>
+      {/* Compass ring */}
       <circle r={22} fill="white" stroke="#94a3b8" strokeWidth={1.5} />
+      {/* Small dot markers at cardinal points on the ring */}
+      {[0, 90, 180, 270].map((a) => (
+        <circle
+          key={a}
+          cx={Math.round(21 * Math.sin((a * Math.PI) / 180))}
+          cy={Math.round(-21 * Math.cos((a * Math.PI) / 180))}
+          r={1.5}
+          fill="#94a3b8"
+        />
+      ))}
       <g transform={`rotate(${rotation})`}>
-        {/* North arrow — green */}
-        <path d="M0,-19 L5,2 L0,9 L-5,2 Z" fill="#2d6a4f" />
-        {/* South arrow — grey */}
-        <path d="M0,19 L5,-2 L0,-9 L-5,-2 Z" fill="#94a3b8" />
+        {/* North half — long green diamond (dominant / clearly "top") */}
+        <path d="M0,-21 L6,0 L0,0 L-6,0 Z" fill="#2d6a4f" />
+        {/* South half — short grey diamond */}
+        <path d="M0,13 L5,0 L0,0 L-5,0 Z" fill="#cbd5e1" />
         {/* Centre pin */}
         <circle r={3} fill="white" stroke="#64748b" strokeWidth={1} />
-        {/* N label rotates with needle — sits just above north tip */}
-        <text x={0} y={-26} textAnchor="middle" fontSize={11} fontWeight="bold" fill="#2d6a4f">N</text>
-        {/* S label rotates with needle — sits just below south tip */}
-        <text x={0} y={33} textAnchor="middle" fontSize={11} fontWeight="bold" fill="#64748b">S</text>
       </g>
     </g>
   );
