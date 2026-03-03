@@ -12,12 +12,12 @@ export const stripe: Stripe | null = process.env.STRIPE_SECRET_KEY
 // Price IDs — set these in env after creating products in the Stripe dashboard
 export const STRIPE_PRICES: Record<"grower" | "harvest", { priceId: string; amount: number; label: string }> = {
   grower: {
-    priceId: process.env.STRIPE_PRICE_GROWER ?? "",
+    priceId: (process.env.STRIPE_PRICE_GROWER ?? "").trim(),
     amount: 5.99,
     label: "$5.99 / month",
   },
   harvest: {
-    priceId: process.env.STRIPE_PRICE_HARVEST ?? "",
+    priceId: (process.env.STRIPE_PRICE_HARVEST ?? "").trim(),
     amount: 9.99,
     label: "$9.99 / month",
   },
