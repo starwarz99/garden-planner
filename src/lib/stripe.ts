@@ -1,10 +1,9 @@
 import Stripe from "stripe";
 
 // Stripe client — null when key is not yet configured
+// No explicit apiVersion — the SDK uses its own built-in default
 export const stripe: Stripe | null = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2026-01-28.clover" as Stripe.LatestApiVersion,
-    })
+  ? new Stripe(process.env.STRIPE_SECRET_KEY)
   : null;
 
 // Price IDs — set these in env after creating products in the Stripe dashboard
