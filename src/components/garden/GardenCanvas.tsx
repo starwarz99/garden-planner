@@ -49,10 +49,8 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
   return (
     <div className="relative rounded-2xl border-2 border-sage/30 bg-white shadow-inner">
       {/* Compass rose — outside the grid, anchored to top-right corner of the card */}
-      <div className="absolute -top-7 right-2 pointer-events-none">
-        <svg width={54} height={54} viewBox="-27 -27 54 54">
-          <CompassRoseSVG x={0} y={0} orientation={orientation} />
-        </svg>
+      <div className="absolute -top-7 right-2">
+        <CompassRose orientation={orientation} />
       </div>
       <svg
         width="100%"
@@ -216,32 +214,45 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
   );
 }
 
-function CompassRoseSVG({ x, y, orientation }: { x: number; y: number; orientation: string }) {
+function CompassRose({ orientation }: { orientation: string }) {
+  const [label, setLabel] = useState<string | null>(null);
   const rotation = orientation === "south" ? 0 : orientation === "west" ? 90 :
-    orientation === "north" ? 180 : 270; // east → N points left
+    orientation === "north" ? 180 : 270;
 
   return (
-    <g transform={`translate(${x}, ${y})`}>
-      {/* Compass ring */}
-      <circle r={22} fill="white" stroke="#94a3b8" strokeWidth={1.5} />
-      {/* Small dot markers at cardinal points on the ring */}
-      {[0, 90, 180, 270].map((a) => (
-        <circle
-          key={a}
-          cx={Math.round(21 * Math.sin((a * Math.PI) / 180))}
-          cy={Math.round(-21 * Math.cos((a * Math.PI) / 180))}
-          r={1.5}
-          fill="#94a3b8"
-        />
-      ))}
-      <g transform={`rotate(${rotation})`}>
-        {/* North half — long green diamond (dominant / clearly "top") */}
-        <path d="M0,-21 L6,0 L0,0 L-6,0 Z" fill="#2d6a4f" />
-        {/* South half — short grey diamond */}
-        <path d="M0,13 L5,0 L0,0 L-5,0 Z" fill="#cbd5e1" />
-        {/* Centre pin */}
-        <circle r={3} fill="white" stroke="#64748b" strokeWidth={1} />
-      </g>
-    </g>
+    <div className="relative">
+      <svg width={54} height={54} viewBox="-27 -27 54 54">
+        {/* Compass ring */}
+        <circle r={22} fill="white" stroke="#94a3b8" strokeWidth={1.5} />
+        {/* Small dot markers at cardinal points on the ring (fixed, don't rotate) */}
+        {[0, 90, 180, 270].map((a) => (
+          <circle
+            key={a}
+            cx={Math.round(21 * Math.sin((a * Math.PI) / 180))}
+            cy={Math.round(-21 * Math.cos((a * Math.PI) / 180))}
+            r={1.5}
+            fill="#94a3b8"
+          />
+        ))}
+        <g transform={`rotate(${rotation})`}>
+          {/* North half — long green diamond */}
+          <path d="M0,-21 L6,0 L0,0 L-6,0 Z" fill="#2d6a4f" />
+          {/* South half — short grey diamond */}
+          <path d="M0,13 L5,0 L0,0 L-5,0 Z" fill="#cbd5e1" />
+          {/* Centre pin */}
+          <circle r={3} fill="white" stroke="#64748b" strokeWidth={1} />
+          {/* Invisible hit areas — rotate with needle so hover always matches the right half */}
+          <rect x={-8} y={-22} width={16} height={22} fill="transparent" className="cursor-help"
+            onMouseEnter={() => setLabel("North")} onMouseLeave={() => setLabel(null)} />
+          <rect x={-7} y={0} width={14} height={14} fill="transparent" className="cursor-help"
+            onMouseEnter={() => setLabel("South")} onMouseLeave={() => setLabel(null)} />
+        </g>
+      </svg>
+      {label && (
+        <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-0.5 text-xs font-semibold bg-white border border-gray-200 rounded shadow text-primary whitespace-nowrap pointer-events-none z-10">
+          {label}
+        </div>
+      )}
+    </div>
   );
 }
