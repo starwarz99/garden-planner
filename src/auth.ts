@@ -51,8 +51,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user?.id) {
         token.id = user.id;
+      }
+      // Always re-fetch plan so Stripe subscription changes are reflected immediately
+      if (token.id) {
         const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
+          where: { id: token.id as string },
           select: { plan: true },
         });
         token.plan = dbUser?.plan ?? "seedling";

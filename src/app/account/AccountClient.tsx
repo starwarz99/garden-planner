@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { usdaZones } from "@/data/usda-zones";
 import type { GardenGoal } from "@/types/garden";
 import { getPlanConfig } from "@/lib/plans";
+import { PricingCards } from "@/components/PricingCards";
 
 interface UserData {
   id: string;
@@ -12,6 +14,7 @@ interface UserData {
   image: string | null;
   createdAt: Date;
   plan: string;
+  stripeCurrentPeriodEnd: Date | null;
   zipCode: string | null;
   usdaZone: string | null;
   soilType: string | null;
@@ -39,6 +42,22 @@ const goalOptions: Array<{ id: GardenGoal; label: string }> = [
 
 export function AccountClient({ user }: AccountClientProps) {
   const planConfig = getPlanConfig(user.plan);
+  const searchParams = useSearchParams();
+  const billingStatus = searchParams.get("billing");
+  const [billingBanner, setBillingBanner] = useState<string | null>(
+    billingStatus === "success"
+      ? "🎉 Subscription activated! Your new plan is now live."
+      : billingStatus === "cancelled"
+      ? "Checkout was cancelled — you have not been charged."
+      : null
+  );
+  useEffect(() => {
+    if (billingBanner) {
+      const t = setTimeout(() => setBillingBanner(null), 6000);
+      return () => clearTimeout(t);
+    }
+  }, [billingBanner]);
+
   const [form, setForm] = useState({
     name:        user.name ?? "",
     zipCode:     user.zipCode ?? "",
@@ -104,6 +123,16 @@ export function AccountClient({ user }: AccountClientProps) {
       <div className="max-w-2xl mx-auto space-y-6">
         <h1 className="text-3xl font-serif font-bold text-primary">My Account</h1>
 
+        {billingBanner && (
+          <div className={`p-4 rounded-xl text-sm font-medium ${
+            billingStatus === "success"
+              ? "bg-green-50 border border-green-200 text-green-800"
+              : "bg-amber-50 border border-amber-200 text-amber-800"
+          }`}>
+            {billingBanner}
+          </div>
+        )}
+
         {/* Profile section */}
         <div className="card space-y-5">
           <h2 className="text-lg font-semibold text-gray-800">Profile</h2>
@@ -154,6 +183,19 @@ export function AccountClient({ user }: AccountClientProps) {
               className="w-full px-4 py-3 border-2 border-sage/20 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed"
             />
           </div>
+        </div>
+
+        {/* Subscription & Billing section */}
+        <div className="card space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-800">Subscription &amp; Billing</h2>
+            {user.plan !== "seedling" && user.stripeCurrentPeriodEnd && (
+              <span className="text-xs text-gray-500">
+                Renews {new Date(user.stripeCurrentPeriodEnd).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              </span>
+            )}
+          </div>
+          <PricingCards currentPlan={user.plan} compact />
         </div>
 
         {/* Garden preferences section */}

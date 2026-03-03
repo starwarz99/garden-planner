@@ -29,6 +29,12 @@ export async function Navbar() {
                 My Account
               </Link>
               <Link
+                href="/pricing"
+                className="text-sm font-medium text-gray-700 hover:text-primary transition-colors"
+              >
+                Pricing
+              </Link>
+              <Link
                 href="/wizard"
                 className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
               >
@@ -50,6 +56,12 @@ export async function Navbar() {
             </>
           ) : (
             <>
+              <Link
+                href="/pricing"
+                className="text-sm font-medium text-gray-700 hover:text-primary transition-colors"
+              >
+                Pricing
+              </Link>
               <Link
                 href="/auth/signin"
                 className="text-sm font-medium text-gray-700 hover:text-primary transition-colors"

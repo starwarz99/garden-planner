@@ -18,6 +18,7 @@ export default async function AccountPage() {
       image: true,
       createdAt: true,
       plan: true,
+      stripeCurrentPeriodEnd: true,
       zipCode: true,
       usdaZone: true,
       soilType: true,

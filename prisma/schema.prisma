@@ -23,7 +23,11 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   // Subscription tier: seedling | grower | harvest
-  plan        String   @default("seedling")
+  plan                   String    @default("seedling")
+  stripeCustomerId       String?   @unique
+  stripeSubscriptionId   String?   @unique
+  stripePriceId          String?
+  stripeCurrentPeriodEnd DateTime?
 
   // Gardening preferences (all optional)
   zipCode     String?
