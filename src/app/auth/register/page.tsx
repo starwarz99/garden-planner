@@ -4,6 +4,8 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { usdaZones } from "@/data/usda-zones";
+import type { GardenPrefsInput } from "@/lib/validations";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -12,16 +14,22 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPrefs, setShowPrefs] = useState(false);
+  const [prefs, setPrefs] = useState<Partial<GardenPrefsInput>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
+    const hasPrefs = Object.values(prefs).some((v) => v !== undefined && v !== "");
+    const body: Record<string, unknown> = { name, email, password };
+    if (hasPrefs) body.prefs = prefs;
+
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify(body),
     });
 
     if (!res.ok) {
@@ -111,6 +119,83 @@ export default function RegisterPage() {
               className="w-full px-4 py-3 border-2 border-sage/30 rounded-xl focus:border-primary focus:outline-none transition-colors"
               placeholder="••••••••"
             />
+          </div>
+
+          {/* Optional prefs collapsible */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowPrefs((p) => !p)}
+              className="flex items-center gap-1 text-sm text-primary font-medium hover:underline"
+            >
+              <span>{showPrefs ? "▾" : "▸"}</span>
+              {showPrefs ? "Hide gardening preferences" : "Add gardening preferences (optional)"}
+            </button>
+
+            {showPrefs && (
+              <div className="mt-3 p-4 bg-mint/40 rounded-xl space-y-3">
+                <p className="text-xs text-gray-500">
+                  These pre-fill the wizard — you can always change them later.
+                </p>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">USDA Zone</label>
+                  <select
+                    value={prefs.usdaZone ?? ""}
+                    onChange={(e) => setPrefs((p) => ({ ...p, usdaZone: e.target.value || undefined }))}
+                    className="w-full px-3 py-2 border-2 border-sage/30 rounded-xl focus:border-primary focus:outline-none transition-colors bg-white text-sm"
+                  >
+                    <option value="">— select —</option>
+                    {usdaZones.map((z) => (
+                      <option key={z.id} value={z.id}>{z.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Soil Type</label>
+                  <select
+                    value={prefs.soilType ?? ""}
+                    onChange={(e) => setPrefs((p) => ({ ...p, soilType: (e.target.value || undefined) as GardenPrefsInput["soilType"] }))}
+                    className="w-full px-3 py-2 border-2 border-sage/30 rounded-xl focus:border-primary focus:outline-none transition-colors bg-white text-sm"
+                  >
+                    <option value="">— select —</option>
+                    <option value="loamy">Loamy</option>
+                    <option value="sandy">Sandy</option>
+                    <option value="clay">Clay</option>
+                    <option value="raised-bed">Raised Bed</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Experience Level</label>
+                  <select
+                    value={prefs.experience ?? ""}
+                    onChange={(e) => setPrefs((p) => ({ ...p, experience: (e.target.value || undefined) as GardenPrefsInput["experience"] }))}
+                    className="w-full px-3 py-2 border-2 border-sage/30 rounded-xl focus:border-primary focus:outline-none transition-colors bg-white text-sm"
+                  >
+                    <option value="">— select —</option>
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="expert">Expert</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Water Preference</label>
+                  <select
+                    value={prefs.waterPref ?? ""}
+                    onChange={(e) => setPrefs((p) => ({ ...p, waterPref: (e.target.value || undefined) as GardenPrefsInput["waterPref"] }))}
+                    className="w-full px-3 py-2 border-2 border-sage/30 rounded-xl focus:border-primary focus:outline-none transition-colors bg-white text-sm"
+                  >
+                    <option value="">— select —</option>
+                    <option value="low">Low</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+              </div>
+            )}
           </div>
 
           <button

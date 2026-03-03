@@ -24,9 +24,12 @@ const defaultWizardData: WizardData = {
   name: "",
 };
 
-export function useWizard() {
+export function useWizard(initialData?: Partial<WizardData>) {
   const [currentStep, setCurrentStep] = useState(1);
-  const [data, setData] = useState<WizardData>(defaultWizardData);
+  const [data, setData] = useState<WizardData>({
+    ...defaultWizardData,
+    ...initialData,
+  });
   const [direction, setDirection] = useState<"forward" | "back">("forward");
 
   const updateData = useCallback(<K extends keyof WizardData>(key: K, value: WizardData[K]) => {

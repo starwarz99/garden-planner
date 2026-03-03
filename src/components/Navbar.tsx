@@ -23,6 +23,12 @@ export async function Navbar() {
                 My Gardens
               </Link>
               <Link
+                href="/account"
+                className="text-sm font-medium text-gray-700 hover:text-primary transition-colors"
+              >
+                My Account
+              </Link>
+              <Link
                 href="/wizard"
                 className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
               >

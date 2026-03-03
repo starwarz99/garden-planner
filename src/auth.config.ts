@@ -35,7 +35,7 @@ export const authConfig: NextAuthConfig = {
 
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const protectedPaths = ["/dashboard", "/garden", "/wizard"];
+      const protectedPaths = ["/dashboard", "/garden", "/wizard", "/account"];
       if (protectedPaths.some((p) => nextUrl.pathname.startsWith(p))) {
         return isLoggedIn;
       }

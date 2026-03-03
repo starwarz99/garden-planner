@@ -18,6 +18,7 @@ import type { GardenDesign, WizardData } from "@/types/garden";
 
 interface GardenWizardProps {
   onComplete: (design: GardenDesign, wizardData: WizardData) => Promise<void>;
+  initialData?: Partial<WizardData>;
 }
 
 const slideVariants = {
@@ -32,8 +33,8 @@ const slideVariants = {
   }),
 };
 
-export function GardenWizard({ onComplete }: GardenWizardProps) {
-  const wizard = useWizard();
+export function GardenWizard({ onComplete, initialData }: GardenWizardProps) {
+  const wizard = useWizard(initialData);
   const { currentStep, totalSteps, data, direction, next, back, goToStep, updateData } = wizard;
   const [isGenerating, setIsGenerating] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);

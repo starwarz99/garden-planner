@@ -43,6 +43,27 @@ export const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+export const gardenPrefsSchema = z.object({
+  zipCode:     z.string().max(10).optional(),
+  usdaZone:    z.string().min(2).optional(),
+  soilType:    z.enum(["loamy", "sandy", "clay", "raised-bed"]).optional(),
+  experience:  z.enum(["beginner", "intermediate", "expert"]).optional(),
+  waterPref:   z.enum(["low", "moderate", "high"]).optional(),
+  sunExposure: z.enum(["full-sun", "partial-sun", "partial-shade", "full-shade"]).optional(),
+  orientation: z.enum(["north", "south", "east", "west"]).optional(),
+  goals:       z.array(z.enum([
+    "maximize-yield", "low-maintenance", "pollinator-friendly",
+    "cut-flowers", "culinary-herbs", "year-round", "organic", "kids-garden",
+  ])).optional(),
+});
+
+export const accountUpdateSchema = z.object({
+  name:  z.string().min(2).max(50).optional(),
+  prefs: gardenPrefsSchema.optional(),
+});
+
+export type GardenPrefsInput = z.infer<typeof gardenPrefsSchema>;
+
 export const saveGardenSchema = z.object({
   name: z.string().min(1).max(100),
   wizardData: wizardDataSchema,

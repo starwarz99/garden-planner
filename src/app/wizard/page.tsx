@@ -1,26 +1,39 @@
-"use client";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import { WizardPageClient } from "./WizardPageClient";
+import type { WizardData } from "@/types/garden";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { GardenWizard } from "@/components/wizard/GardenWizard";
-import { GeneratingOverlay } from "@/components/GeneratingOverlay";
-import type { GardenDesign, WizardData } from "@/types/garden";
+export default async function WizardPage() {
+  const session = await auth();
 
-export default function WizardPage() {
-  const router = useRouter();
-  const [isGenerating, setIsGenerating] = useState(false);
+  let initialData: Partial<WizardData> | undefined;
 
-  const handleComplete = async (design: GardenDesign, wizardData: WizardData) => {
-    setIsGenerating(true);
-    sessionStorage.setItem("gardenDesign", JSON.stringify(design));
-    sessionStorage.setItem("wizardData", JSON.stringify(wizardData));
-    router.push("/wizard/result");
-  };
+  if (session?.user?.id) {
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        usdaZone: true,
+        soilType: true,
+        experience: true,
+        waterPref: true,
+        sunExposure: true,
+        orientation: true,
+        goals: true,
+      },
+    });
 
-  return (
-    <div className="min-h-screen bg-mint/20">
-      <GeneratingOverlay isVisible={isGenerating} />
-      <GardenWizard onComplete={handleComplete} />
-    </div>
-  );
+    if (user) {
+      const partial: Partial<WizardData> = {};
+      if (user.usdaZone)    partial.usdaZone    = user.usdaZone as WizardData["usdaZone"];
+      if (user.soilType)    partial.soilType    = user.soilType as WizardData["soilType"];
+      if (user.experience)  partial.experience  = user.experience as WizardData["experience"];
+      if (user.waterPref)   partial.waterPref   = user.waterPref as WizardData["waterPref"];
+      if (user.sunExposure) partial.sunExposure = user.sunExposure as WizardData["sunExposure"];
+      if (user.orientation) partial.orientation = user.orientation as WizardData["orientation"];
+      if (user.goals?.length) partial.goals     = user.goals as WizardData["goals"];
+      if (Object.keys(partial).length > 0) initialData = partial;
+    }
+  }
+
+  return <WizardPageClient initialData={initialData} />;
 }
