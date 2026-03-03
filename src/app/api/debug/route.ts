@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import Stripe from "stripe";
 
 // Temporary diagnostic endpoint — remove after debugging
 export async function GET() {
@@ -53,7 +54,19 @@ export async function GET() {
     results.anthropicSdkError = e instanceof Error ? `${e.constructor.name}: ${e.message}` : String(e);
   }
 
-  // 4. Test Prisma/DB
+  // 4. Test Stripe connectivity
+  results.hasStripeKey = !!process.env.STRIPE_SECRET_KEY;
+  try {
+    const s = new Stripe(process.env.STRIPE_SECRET_KEY ?? "");
+    const products = await s.products.list({ limit: 1 });
+    results.stripe = "ok";
+    results.stripeProducts = products.data.length;
+  } catch (e) {
+    results.stripe = "error";
+    results.stripeError = e instanceof Error ? `${e.constructor.name}: ${e.message}` : String(e);
+  }
+
+  // 5. Test Prisma/DB
   try {
     const { prisma } = await import("@/lib/prisma");
     await prisma.$queryRaw`SELECT 1`;
