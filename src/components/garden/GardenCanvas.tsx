@@ -48,6 +48,12 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
 
   return (
     <div className="relative rounded-2xl border-2 border-sage/30 bg-white shadow-inner">
+      {/* Compass rose — outside the grid, anchored to top-right corner of the card */}
+      <div className="absolute -top-7 right-2 pointer-events-none">
+        <svg width={54} height={54} viewBox="-27 -27 54 54">
+          <CompassRoseSVG x={0} y={0} orientation={orientation} />
+        </svg>
+      </div>
       <svg
         width="100%"
         viewBox={`0 0 ${svgWidth} ${svgHeight}`}
@@ -169,13 +175,6 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
           textAnchor="middle" fontSize={10} fill="#64748b">
           {widthFt} ft
         </text>
-
-        {/* Compass rose in top-right */}
-        <CompassRoseSVG
-          x={svgWidth - PADDING - 30}
-          y={PADDING + 30}
-          orientation={orientation}
-        />
 
         {/* Tooltip */}
         {tooltip && (
