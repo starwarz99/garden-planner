@@ -95,7 +95,7 @@ export async function POST(req: Request) {
     if (Array.isArray(designJson.grid)) {
       designJson.grid.forEach((row: unknown[], rowIdx: number) => {
         row.forEach((cell: unknown, colIdx: number) => {
-          if (cell && typeof cell === "object") {
+          if (cell && typeof cell === "object" && "plantId" in cell) {
             const c = cell as { plantId: string; plantName: string; emoji: string; zoneColor?: string };
             gridPlants.push({
               gardenId: garden.id,
