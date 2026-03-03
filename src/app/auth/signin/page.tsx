@@ -3,10 +3,8 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 export default function SignInPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -27,8 +25,7 @@ export default function SignInPage() {
       setError("Invalid email or password");
       setLoading(false);
     } else {
-      router.refresh();
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     }
   };
 

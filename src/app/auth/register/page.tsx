@@ -39,8 +39,14 @@ export default function RegisterPage() {
       return;
     }
 
-    // Auto sign-in after registration
-    await signIn("credentials", { email, password, callbackUrl: "/dashboard", redirect: true });
+    // Auto sign-in after registration, then hard-redirect so server components re-render
+    const result = await signIn("credentials", { email, password, redirect: false });
+    if (!result?.error) {
+      window.location.href = "/dashboard";
+    } else {
+      setError("Account created but sign-in failed. Please sign in manually.");
+      setLoading(false);
+    }
   };
 
   return (
