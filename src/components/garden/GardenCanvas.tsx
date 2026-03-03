@@ -209,8 +209,8 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
 }
 
 function CompassRoseSVG({ x, y, orientation }: { x: number; y: number; orientation: string }) {
-  const rotation = orientation === "north" ? 0 : orientation === "east" ? 90 :
-    orientation === "south" ? 180 : 270;
+  const rotation = orientation === "south" ? 0 : orientation === "west" ? 90 :
+    orientation === "north" ? 180 : 270; // east → N points left
 
   return (
     <g transform={`translate(${x}, ${y})`}>
