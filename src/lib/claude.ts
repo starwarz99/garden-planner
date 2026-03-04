@@ -130,23 +130,40 @@ export async function generateGardenDesign(data: WizardData): Promise<GardenDesi
   const gridCols = Math.floor(data.widthFt / 2);
   const gridRows = Math.floor(data.lengthFt / 2);
 
-  // Retry up to 3 times on 529 overloaded errors with exponential backoff
+  // Scale token budget to grid size — smaller grids need far fewer tokens
+  const cellCount = gridCols * gridRows;
+  const maxTokens = cellCount <= 32 ? 3000 : cellCount <= 64 ? 5000 : 8000;
+
+  // Retry up to 3 times on 529 overloaded or timeout errors.
+  // Keep delays short (1s, 2s) so retries fit within Vercel's 60s function limit.
   let message;
   const maxAttempts = 3;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      message = await anthropic.messages.create({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 8192,
-        temperature: 0.2,
-        messages: [{ role: "user", content: prompt }],
-      });
+      message = await anthropic.messages.create(
+        {
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: maxTokens,
+          temperature: 0.2,
+          messages: [{ role: "user", content: prompt }],
+        },
+        { timeout: 25000 }, // 25s per attempt — leaves room for up to 2 retries in 60s
+      );
       break;
     } catch (err: unknown) {
       const status = (err as { status?: number }).status;
-      if (status === 529 && attempt < maxAttempts) {
-        await new Promise((res) => setTimeout(res, attempt * 2000));
+      const isRetryable =
+        status === 529 ||
+        status === 529 ||
+        (err as { message?: string }).message?.includes("timeout") ||
+        (err as { message?: string }).message?.includes("timed out");
+      if (isRetryable && attempt < maxAttempts) {
+        await new Promise((res) => setTimeout(res, attempt * 1000));
         continue;
+      }
+      if ((err as { message?: string }).message?.includes("timeout") ||
+          (err as { message?: string }).message?.includes("timed out")) {
+        throw new Error("AI is taking too long — please try again.");
       }
       throw err;
     }
