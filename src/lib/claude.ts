@@ -130,12 +130,28 @@ export async function generateGardenDesign(data: WizardData): Promise<GardenDesi
   const gridCols = Math.floor(data.widthFt / 2);
   const gridRows = Math.floor(data.lengthFt / 2);
 
-  const message = await anthropic.messages.create({
-    model: "claude-haiku-4-5-20251001",
-    max_tokens: 8192,
-    temperature: 0.2,
-    messages: [{ role: "user", content: prompt }],
-  });
+  // Retry up to 3 times on 529 overloaded errors with exponential backoff
+  let message;
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      message = await anthropic.messages.create({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 8192,
+        temperature: 0.2,
+        messages: [{ role: "user", content: prompt }],
+      });
+      break;
+    } catch (err: unknown) {
+      const status = (err as { status?: number }).status;
+      if (status === 529 && attempt < maxAttempts) {
+        await new Promise((res) => setTimeout(res, attempt * 2000));
+        continue;
+      }
+      throw err;
+    }
+  }
+  if (!message) throw new Error("AI service is currently overloaded — please try again in a moment.");
 
   if (message.stop_reason === "max_tokens") {
     throw new Error("Garden is too large to generate — try a smaller size or fewer plants.");
