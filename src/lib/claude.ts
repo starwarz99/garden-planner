@@ -7,7 +7,7 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY?.trim(),
 });
 
-function buildPrompt(data: WizardData): string {
+function buildPrompt(data: WizardData, includeCareCalendar: boolean): string {
   const zone = getZoneById(data.usdaZone);
   const gridCols = Math.floor(data.widthFt / 2);
   const gridRows = Math.floor(data.lengthFt / 2);
@@ -104,7 +104,7 @@ Respond with ONLY valid JSON (no markdown code blocks, no extra text):
     "Zone ${data.usdaZone}: Start tomatoes indoors 6 weeks before last frost (${zone?.lastFrost ?? "check local dates"})",
     ...
   ],
-  "careCalendar": {
+  ${includeCareCalendar ? `"careCalendar": {
     "January": ["Plan seed orders", "Clean tools"],
     "February": ["Start peppers and eggplant indoors"],
     "March": [...],
@@ -117,7 +117,7 @@ Respond with ONLY valid JSON (no markdown code blocks, no extra text):
     "October": [...],
     "November": [...],
     "December": [...]
-  },
+  },` : ""}
   "designNotes": "Brief paragraph explaining the overall design philosophy and key companion planting decisions",
   "estimatedYield": "Estimated harvest summary, e.g. '40+ lbs tomatoes, 20 lbs zucchini...'"
 }
@@ -125,18 +125,21 @@ Respond with ONLY valid JSON (no markdown code blocks, no extra text):
 The grid must be exactly ${gridRows} rows with exactly ${gridCols} cells per row. Use zone colors consistently — pick 3–6 distinct hex colors for different growing zones.`;
 }
 
-export async function generateGardenDesign(data: WizardData): Promise<GardenDesign> {
-  const prompt = buildPrompt(data);
+export async function generateGardenDesign(data: WizardData, includeCareCalendar = false): Promise<GardenDesign> {
+  const prompt = buildPrompt(data, includeCareCalendar);
   const gridCols = Math.floor(data.widthFt / 2);
   const gridRows = Math.floor(data.lengthFt / 2);
 
-  // Scale token budget to grid size — smaller grids need far fewer tokens
+  // Scale token budget to grid size — omit careCalendar budget when not needed
   const cellCount = gridCols * gridRows;
-  const maxTokens = cellCount <= 32 ? 3000 : cellCount <= 64 ? 5000 : 8000;
+  const calendarExtra = includeCareCalendar ? 1500 : 0;
+  const maxTokens = (cellCount <= 32 ? 2000 : cellCount <= 64 ? 3500 : 6000) + calendarExtra;
 
-  // Retry up to 3 times on 529 overloaded or timeout errors.
-  // Delays: 2s then 4s — fits within Vercel's 60s function limit (3 × 25s + 6s headroom).
+  // Retry strategy:
+  // - 529 overloaded: up to 3 attempts (fast to fail, worth retrying)
+  // - timeout: max 1 retry (slow to fail, must fit in Vercel's 60s limit)
   let message;
+  let timeoutAttempts = 0;
   const maxAttempts = 3;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -147,7 +150,7 @@ export async function generateGardenDesign(data: WizardData): Promise<GardenDesi
           temperature: 0.2,
           messages: [{ role: "user", content: prompt }],
         },
-        { timeout: 25000 },
+        { timeout: 30000 }, // 30s per attempt
       );
       break;
     } catch (err: unknown) {
@@ -155,11 +158,16 @@ export async function generateGardenDesign(data: WizardData): Promise<GardenDesi
       const msg = (err as { message?: string }).message ?? "";
       const isOverloaded = status === 529;
       const isTimeout = msg.includes("timeout") || msg.includes("timed out");
-      if ((isOverloaded || isTimeout) && attempt < maxAttempts) {
+      if (isTimeout) timeoutAttempts++;
+
+      const canRetry =
+        (isOverloaded && attempt < maxAttempts) ||
+        (isTimeout && timeoutAttempts < 2);
+
+      if (canRetry) {
         await new Promise((res) => setTimeout(res, attempt * 2000));
         continue;
       }
-      // All retries exhausted or non-retryable error — throw a clean user-facing message
       if (isOverloaded) {
         throw new Error("The AI service is overloaded right now — please wait a moment and try again.");
       }

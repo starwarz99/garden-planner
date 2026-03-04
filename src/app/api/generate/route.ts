@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { generateGardenDesign } from "@/lib/claude";
+import { getPlanConfig } from "@/lib/plans";
 import { wizardDataSchema } from "@/lib/validations";
 import { NextResponse } from "next/server";
 
@@ -22,7 +23,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const design = await generateGardenDesign(parsed.data);
+    const planConfig = getPlanConfig(session.user.plan ?? "seedling");
+    const design = await generateGardenDesign(parsed.data, planConfig.canSeeCareCalendar);
 
     return NextResponse.json({ success: true, design });
   } catch (error) {
