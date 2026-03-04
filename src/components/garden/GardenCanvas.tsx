@@ -213,24 +213,28 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
 
         {/* Tooltip */}
         {tooltip && (() => {
-          const tooltipW = 165;
-          const pad = 10;
+          // Scale tooltip width to garden size so it doesn't overwhelm small grids
+          const tooltipW = Math.min(145, Math.max(85, Math.round(svgWidth * 0.48)));
+          const pad = 7;
           const availW = tooltipW - pad * 2;
+          const baseFontSize = tooltipW < 105 ? 11 : 12;
+          const noteSize = tooltipW < 105 ? 9 : 10;
 
           // Scale font down for long names rather than clipping
           const nameText = `${tooltip.cell.emoji} ${tooltip.cell.plantName}`;
-          const estNameW = nameText.length * 7.5;
+          const estNameW = nameText.length * (baseFontSize * 0.62);
           const nameFontSize = estNameW > availW
-            ? Math.max(9, Math.floor(13 * availW / estNameW))
-            : 13;
+            ? Math.max(8, Math.floor(baseFontSize * availW / estNameW))
+            : baseFontSize;
 
-          // Wrap note across up to 2 lines (~28 chars each at fontSize 10)
+          // Wrap note across up to 2 lines
+          const charsPerLine = Math.floor(availW / (noteSize * 0.62));
           const noteLines: string[] = [];
           if (tooltip.cell.note) {
             const words = tooltip.cell.note.split(" ");
             let line = "";
             for (const word of words) {
-              if ((line + " " + word).trim().length > 28) {
+              if ((line + " " + word).trim().length > charsPerLine) {
                 if (line) noteLines.push(line);
                 line = word;
                 if (noteLines.length === 1) { noteLines.push(line); break; }
@@ -241,7 +245,8 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
             if (noteLines.length === 0 && line) noteLines.push(line);
           }
 
-          const tooltipH = 32 + (noteLines.length > 0 ? noteLines.length * 14 + 4 : 0);
+          const lineH = noteSize + 4;
+          const tooltipH = 28 + (noteLines.length > 0 ? noteLines.length * lineH + 3 : 0);
           const rectX = Math.min(Math.max(tooltip.x - tooltipW / 2, 4), svgWidth - tooltipW - 4);
           const rectY = tooltip.y - 8 >= tooltipH + 4
             ? tooltip.y - tooltipH - 4
@@ -249,14 +254,14 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
 
           return (
             <g pointerEvents="none">
-              <rect x={rectX} y={rectY} width={tooltipW} height={tooltipH} rx={8}
+              <rect x={rectX} y={rectY} width={tooltipW} height={tooltipH} rx={6}
                 fill="white" stroke="#2d6a4f" strokeWidth={1.5}
                 filter="drop-shadow(0 2px 4px rgba(0,0,0,0.15))" />
-              <text x={rectX + pad} y={rectY + 20} fontSize={nameFontSize} fontWeight="600" fill="#1a3d2e">
+              <text x={rectX + pad} y={rectY + 18} fontSize={nameFontSize} fontWeight="600" fill="#1a3d2e">
                 {nameText}
               </text>
               {noteLines.map((line, i) => (
-                <text key={i} x={rectX + pad} y={rectY + 34 + i * 14} fontSize={10} fill="#64748b">
+                <text key={i} x={rectX + pad} y={rectY + 28 + i * lineH} fontSize={noteSize} fill="#64748b">
                   {line}
                 </text>
               ))}

@@ -8,9 +8,10 @@ interface StepProps {
   updateData: <K extends keyof WizardData>(key: K, value: WizardData[K]) => void;
   maxDimension?: number | null;
   planName?: string;
+  isTopPlan?: boolean;
 }
 
-export function Step1Dimensions({ data, updateData, maxDimension, planName }: StepProps) {
+export function Step1Dimensions({ data, updateData, maxDimension, planName, isTopPlan }: StepProps) {
   const cap = maxDimension ?? 200;
   const clamp = (v: number) => Math.min(cap, Math.max(4, v));
 
@@ -28,7 +29,7 @@ export function Step1Dimensions({ data, updateData, maxDimension, planName }: St
         <p className="text-gray-600">Enter your garden&apos;s dimensions. The planner works best between 8×8 and 40×60 ft.</p>
       </div>
 
-      {maxDimension && (
+      {maxDimension && !isTopPlan && (
         <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800 flex items-center gap-2">
           <span>🔒</span>
           <span>
