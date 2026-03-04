@@ -65,12 +65,14 @@ export function DashboardClient({ initialGardens, userName, maxGardens, planName
               <div className="text-xs text-gray-500 mb-1">
                 {planName} plan — {maxGardens}/{maxGardens} garden{maxGardens !== 1 ? "s" : ""} used
               </div>
-              <Link
-                href="/account"
-                className="px-6 py-3 bg-gray-100 text-gray-500 font-bold rounded-xl border-2 border-dashed border-gray-300 hover:border-primary hover:text-primary transition-all flex items-center gap-2 text-sm"
-              >
-                🔒 Upgrade to add more
-              </Link>
+              {planName.toLowerCase() !== "harvest" && (
+                <Link
+                  href="/account"
+                  className="px-6 py-3 bg-gray-100 text-gray-500 font-bold rounded-xl border-2 border-dashed border-gray-300 hover:border-primary hover:text-primary transition-all flex items-center gap-2 text-sm"
+                >
+                  🔒 Upgrade to add more
+                </Link>
+              )}
             </div>
           )}
         </div>
@@ -87,7 +89,7 @@ export function DashboardClient({ initialGardens, userName, maxGardens, planName
               Your garden awaits
             </h2>
             <p className="text-gray-500 mb-8 max-w-md mx-auto">
-              Answer 10 quick questions and Claude AI will design a personalized,
+              Answer 10 quick questions and AI will design a personalized,
               companion-planting optimized garden layout just for you.
             </p>
             <Link

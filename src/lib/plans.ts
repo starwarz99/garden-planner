@@ -5,6 +5,7 @@ export interface PlanConfig {
   emoji: string;
   tagline: string;
   maxGardens: number;
+  maxDimension: number | null; // max width/length in ft; null = unlimited
   canRegenerate: boolean;
   canSavePreferences: boolean;
   canAdjustQuantity: boolean;
@@ -18,6 +19,7 @@ export const PLANS: Record<Plan, PlanConfig> = {
     emoji: "🌱",
     tagline: "Free forever",
     maxGardens: 1,
+    maxDimension: 20,
     canRegenerate: false,
     canSavePreferences: false,
     canAdjustQuantity: false,
@@ -29,6 +31,7 @@ export const PLANS: Record<Plan, PlanConfig> = {
     emoji: "🌿",
     tagline: "Pro",
     maxGardens: 3,
+    maxDimension: 40,
     canRegenerate: true,
     canSavePreferences: true,
     canAdjustQuantity: true,
@@ -40,6 +43,7 @@ export const PLANS: Record<Plan, PlanConfig> = {
     emoji: "🌻",
     tagline: "Premium",
     maxGardens: 5,
+    maxDimension: 60,
     canRegenerate: true,
     canSavePreferences: true,
     canAdjustQuantity: true,

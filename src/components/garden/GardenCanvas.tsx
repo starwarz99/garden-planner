@@ -212,40 +212,57 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
         </text>
 
         {/* Tooltip */}
-        {tooltip && (
-          <g>
-            <rect
-              x={Math.min(tooltip.x - 60, svgWidth - 140)}
-              y={Math.max(tooltip.y - 65, 8)}
-              width={130}
-              height={55}
-              rx={8}
-              fill="white"
-              stroke="#2d6a4f"
-              strokeWidth={1.5}
-              filter="drop-shadow(0 2px 4px rgba(0,0,0,0.15))"
-            />
-            <text
-              x={Math.min(tooltip.x - 60, svgWidth - 140) + 10}
-              y={Math.max(tooltip.y - 65, 8) + 18}
-              fontSize={13}
-              fontWeight="600"
-              fill="#1a3d2e"
-            >
-              {tooltip.cell.emoji} {tooltip.cell.plantName}
-            </text>
-            {tooltip.cell.note && (
-              <text
-                x={Math.min(tooltip.x - 60, svgWidth - 140) + 10}
-                y={Math.max(tooltip.y - 65, 8) + 36}
-                fontSize={10}
-                fill="#64748b"
-              >
-                {tooltip.cell.note.substring(0, 25)}
+        {tooltip && (() => {
+          const tooltipW = 165;
+          const pad = 10;
+          const availW = tooltipW - pad * 2;
+
+          // Scale font down for long names rather than clipping
+          const nameText = `${tooltip.cell.emoji} ${tooltip.cell.plantName}`;
+          const estNameW = nameText.length * 7.5;
+          const nameFontSize = estNameW > availW
+            ? Math.max(9, Math.floor(13 * availW / estNameW))
+            : 13;
+
+          // Wrap note across up to 2 lines (~28 chars each at fontSize 10)
+          const noteLines: string[] = [];
+          if (tooltip.cell.note) {
+            const words = tooltip.cell.note.split(" ");
+            let line = "";
+            for (const word of words) {
+              if ((line + " " + word).trim().length > 28) {
+                if (line) noteLines.push(line);
+                line = word;
+                if (noteLines.length === 1) { noteLines.push(line); break; }
+              } else {
+                line = (line + " " + word).trim();
+              }
+            }
+            if (noteLines.length === 0 && line) noteLines.push(line);
+          }
+
+          const tooltipH = 32 + (noteLines.length > 0 ? noteLines.length * 14 + 4 : 0);
+          const rectX = Math.min(Math.max(tooltip.x - tooltipW / 2, 4), svgWidth - tooltipW - 4);
+          const rectY = tooltip.y - 8 >= tooltipH + 4
+            ? tooltip.y - tooltipH - 4
+            : tooltip.y + CELL_SIZE + 4;
+
+          return (
+            <g pointerEvents="none">
+              <rect x={rectX} y={rectY} width={tooltipW} height={tooltipH} rx={8}
+                fill="white" stroke="#2d6a4f" strokeWidth={1.5}
+                filter="drop-shadow(0 2px 4px rgba(0,0,0,0.15))" />
+              <text x={rectX + pad} y={rectY + 20} fontSize={nameFontSize} fontWeight="600" fill="#1a3d2e">
+                {nameText}
               </text>
-            )}
-          </g>
-        )}
+              {noteLines.map((line, i) => (
+                <text key={i} x={rectX + pad} y={rectY + 34 + i * 14} fontSize={10} fill="#64748b">
+                  {line}
+                </text>
+              ))}
+            </g>
+          );
+        })()}
       </svg>
     </div>
   );

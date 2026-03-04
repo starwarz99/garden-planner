@@ -72,7 +72,7 @@ export function GeneratingOverlay({ isVisible }: GeneratingOverlayProps) {
             </div>
 
             <h3 className="text-xl font-serif font-bold text-primary mb-2">
-              Claude is designing your garden
+              AI is designing your garden
             </h3>
 
             <AnimatingMessage messages={messages} />

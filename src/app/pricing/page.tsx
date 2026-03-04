@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { PricingCards } from "@/components/PricingCards";
 import Link from "next/link";
 
-export const metadata = { title: "Pricing — Garden Planner" };
+export const metadata = { title: "Pricing — Planters Blueprint" };
 
 export default async function PricingPage() {
   const session = await auth();

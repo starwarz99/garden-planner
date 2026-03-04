@@ -100,7 +100,7 @@ export function Step5Style({ data, updateData }: StepProps) {
       <div>
         <div className="text-center mb-6">
           <h2 className="text-2xl font-serif font-bold text-primary mb-2">Choose your garden style</h2>
-          <p className="text-gray-600">This shapes the layout aesthetic and plant selection Claude will use.</p>
+          <p className="text-gray-600">This shapes the layout aesthetic and plant selection AI will use.</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -31,7 +31,7 @@ export function Step10Review({ data, updateData, onGenerate, isGenerating }: Ste
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-serif font-bold text-primary mb-2">Review & Generate 🌻</h2>
-        <p className="text-gray-600">Give your garden a name, then let Claude create your personalized layout!</p>
+        <p className="text-gray-600">Give your garden a name, then let AI create your personalized layout!</p>
       </div>
 
       {/* Garden Name */}
@@ -67,7 +67,7 @@ export function Step10Review({ data, updateData, onGenerate, isGenerating }: Ste
           Selected plants ({allSelectedPlants.length})
         </div>
         {allSelectedPlants.length === 0 ? (
-          <p className="text-sm text-gray-500 italic">No specific plants selected — Claude will choose the best ones for your zone and style.</p>
+          <p className="text-sm text-gray-500 italic">No specific plants selected — AI will choose the best ones for your zone and style.</p>
         ) : (
           <div className="flex flex-wrap gap-1.5">
             {allSelectedPlants.map((plant) => {
@@ -115,7 +115,7 @@ export function Step10Review({ data, updateData, onGenerate, isGenerating }: Ste
         {isGenerating ? (
           <>
             <span className="animate-spin text-2xl">🌀</span>
-            <span>Claude is designing your garden…</span>
+            <span>AI is designing your garden…</span>
           </>
         ) : (
           <>

@@ -74,7 +74,7 @@ export function GardenWizard({ onComplete, initialData }: GardenWizardProps) {
   const renderStep = () => {
     const props = { data, updateData };
     switch (currentStep) {
-      case 1: return <Step1Dimensions {...props} />;
+      case 1: return <Step1Dimensions {...props} maxDimension={planConfig.maxDimension} planName={planConfig.name} />;
       case 2: return <Step2Zone {...props} />;
       case 3: return <Step3Soil {...props} />;
       case 4: return <Step4Sun {...props} />;

@@ -34,13 +34,38 @@ export async function POST(req: Request) {
   try {
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { email: true, name: true, stripeCustomerId: true },
+      select: { email: true, name: true, stripeCustomerId: true, stripeSubscriptionId: true },
     });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    const origin = req.headers.get("origin") ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+
+    // If user already has an active subscription, upgrade/downgrade it in-place.
+    // This cancels the old plan automatically and prorates the billing.
+    if (user.stripeSubscriptionId) {
+      const existing = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+      if (["active", "trialing"].includes(existing.status)) {
+        const itemId = existing.items.data[0]?.id;
+        if (itemId) {
+          await stripe.subscriptions.update(user.stripeSubscriptionId, {
+            items: [{ id: itemId, price: priceConfig.priceId }],
+            proration_behavior: "always_invoice",
+            metadata: { userId: session.user.id, plan },
+          });
+          // Update DB immediately — webhook will also confirm
+          await prisma.user.update({
+            where: { id: session.user.id },
+            data: { plan, stripePriceId: priceConfig.priceId },
+          });
+          return NextResponse.json({ url: `${origin}/account?billing=success` });
+        }
+      }
+    }
+
+    // No existing subscription — start a new checkout session
     // Get or create Stripe customer
     let customerId = user.stripeCustomerId;
     if (!customerId) {
@@ -55,8 +80,6 @@ export async function POST(req: Request) {
         data: { stripeCustomerId: customerId },
       });
     }
-
-    const origin = req.headers.get("origin") ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: customerId,

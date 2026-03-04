@@ -43,7 +43,7 @@ export function Step9Goals({ data, updateData }: StepProps) {
     <div className="space-y-8">
       <div className="text-center">
         <h2 className="text-2xl font-serif font-bold text-primary mb-2">Goals, experience & water</h2>
-        <p className="text-gray-600">Tell Claude what matters most to you for a personalized design.</p>
+        <p className="text-gray-600">Tell AI what matters most to you for a personalized design.</p>
       </div>
 
       {/* Goals */}

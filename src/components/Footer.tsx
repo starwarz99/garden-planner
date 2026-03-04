@@ -5,13 +5,13 @@ export function Footer() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-primary font-serif font-bold">
             <span className="text-xl">🌱</span>
-            <span>Garden Planner</span>
+            <span>Planters Blueprint</span>
           </div>
           <p className="text-sm text-gray-500">
             AI-powered companion planting · Personalized for your zone
           </p>
           <p className="text-xs text-gray-400">
-            Powered by Claude AI
+            Powered by AI
           </p>
         </div>
       </div>

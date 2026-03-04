@@ -15,6 +15,7 @@ interface UserData {
   createdAt: Date;
   plan: string;
   stripeCurrentPeriodEnd: Date | null;
+  stripeCancelAtPeriodEnd: boolean;
   zipCode: string | null;
   usdaZone: string | null;
   soilType: string | null;
@@ -71,6 +72,7 @@ export function AccountClient({ user }: AccountClientProps) {
   });
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [nameStatus, setNameStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   const initials = (form.name || user.email || "?")
     .split(" ")
@@ -86,6 +88,22 @@ export function AccountClient({ user }: AccountClientProps) {
         ? prev.goals.filter((g) => g !== goal)
         : [...prev.goals, goal],
     }));
+  };
+
+  const handleSaveName = async () => {
+    setNameStatus("saving");
+    const res = await fetch("/api/account", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: form.name || undefined }),
+    });
+    if (res.ok) {
+      setNameStatus("saved");
+      setTimeout(() => setNameStatus("idle"), 3000);
+    } else {
+      setNameStatus("error");
+      setTimeout(() => setNameStatus("idle"), 3000);
+    }
   };
 
   const handleSave = async () => {
@@ -165,13 +183,22 @@ export function AccountClient({ user }: AccountClientProps) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Display name</label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-              className="w-full px-4 py-3 border-2 border-sage/30 rounded-xl focus:border-primary focus:outline-none transition-colors"
-              placeholder="Your name"
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={form.name}
+                onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+                className="flex-1 px-4 py-3 border-2 border-sage/30 rounded-xl focus:border-primary focus:outline-none transition-colors"
+                placeholder="Your name"
+              />
+              <button
+                onClick={handleSaveName}
+                disabled={nameStatus === "saving"}
+                className="px-5 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 disabled:opacity-50 transition-colors text-sm whitespace-nowrap"
+              >
+                {nameStatus === "saving" ? "Saving…" : nameStatus === "saved" ? "Saved ✓" : nameStatus === "error" ? "Error" : "Save"}
+              </button>
+            </div>
           </div>
 
           <div>
@@ -190,8 +217,11 @@ export function AccountClient({ user }: AccountClientProps) {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-800">Subscription &amp; Billing</h2>
             {user.plan !== "seedling" && user.stripeCurrentPeriodEnd && (
-              <span className="text-xs text-gray-500">
-                Renews {new Date(user.stripeCurrentPeriodEnd).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              <span className={`text-xs ${user.stripeCancelAtPeriodEnd ? "text-amber-600 font-medium" : "text-gray-500"}`}>
+                {user.stripeCancelAtPeriodEnd
+                  ? `Cancels ${new Date(user.stripeCurrentPeriodEnd).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} — access continues until then`
+                  : `Renews ${new Date(user.stripeCurrentPeriodEnd).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+                }
               </span>
             )}
           </div>

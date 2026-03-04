@@ -67,6 +67,17 @@ export async function POST(req: Request) {
       );
     }
 
+    // Enforce per-plan dimension limit
+    if (planConfig.maxDimension !== null) {
+      const max = planConfig.maxDimension;
+      if (wizardData.widthFt > max || wizardData.lengthFt > max) {
+        return NextResponse.json(
+          { error: `Your ${planConfig.name} plan supports gardens up to ${max}×${max} ft. Upgrade for larger gardens.` },
+          { status: 403 }
+        );
+      }
+    }
+
     const slug = generateSlug(name);
 
     const allPlants = [

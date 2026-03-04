@@ -5,7 +5,7 @@ const features = [
   {
     emoji: "🤖",
     title: "AI-Powered Design",
-    description: "Claude AI creates an intelligent layout using companion planting science and your specific conditions.",
+    description: "AI creates an intelligent layout using companion planting science and your specific conditions.",
   },
   {
     emoji: "🗺️",
@@ -15,7 +15,7 @@ const features = [
   {
     emoji: "🌡️",
     title: "Zone-Aware Planning",
-    description: "All 26 USDA hardiness zones supported. Claude picks plants that will actually survive your winters.",
+    description: "All 26 USDA hardiness zones supported. AI picks plants that will actually survive your winters.",
   },
   {
     emoji: "🌿",
@@ -36,7 +36,7 @@ const features = [
 
 const steps = [
   { num: "1", label: "Answer 10 questions", desc: "Size, zone, soil, sun, style, plants, goals" },
-  { num: "2", label: "Claude designs it", desc: "AI generates an optimized companion-planting layout" },
+  { num: "2", label: "AI designs it", desc: "AI generates an optimized companion-planting layout" },
   { num: "3", label: "View your garden map", desc: "Interactive SVG with zones, plants, and care calendar" },
   { num: "4", label: "Save & grow!", desc: "Keep multiple designs, revisit, and plan your season" },
 ];
@@ -66,14 +66,14 @@ export default async function HomePage() {
 
         <div className="relative max-w-5xl mx-auto px-4 py-24 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/20 rounded-full text-sm font-medium mb-6">
-            <span>✨</span> Powered by Claude AI
+            <span>✨</span> Powered by AI
           </div>
           <h1 className="text-5xl sm:text-6xl font-serif font-bold leading-tight mb-6">
             Your perfect garden,<br className="hidden sm:block" />
             designed by AI
           </h1>
           <p className="text-xl text-white/80 max-w-2xl mx-auto mb-10">
-            Answer 10 questions about your garden space. Claude creates a personalized,
+            Answer 10 questions about your garden space. AI creates a personalized,
             companion-planting optimized layout with a seasonal care calendar — all for free.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

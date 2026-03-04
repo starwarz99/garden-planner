@@ -78,7 +78,7 @@ export interface WizardData {
 }
 
 // ─────────────────────────────────────────────
-// Garden design (returned from Claude)
+// Garden design (returned from AI)
 // ─────────────────────────────────────────────
 
 export interface PlantCell {

@@ -87,6 +87,17 @@ export default function WizardResultPage() {
     setError(null);
 
     try {
+      // Capture SVG snapshot with explicit dimensions for thumbnail rendering
+      let svgSnapshot: string | null = null;
+      const svgEl = document.getElementById("garden-canvas-svg") as SVGSVGElement | null;
+      if (svgEl) {
+        const { width, height } = svgEl.getBoundingClientRect();
+        const clone = svgEl.cloneNode(true) as SVGSVGElement;
+        clone.setAttribute("width", String(Math.round(width)));
+        clone.setAttribute("height", String(Math.round(height)));
+        svgSnapshot = new XMLSerializer().serializeToString(clone);
+      }
+
       const res = await fetch("/api/gardens", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -94,6 +105,7 @@ export default function WizardResultPage() {
           name: wizardData.name,
           wizardData,
           designJson: design,
+          svgSnapshot,
         }),
       });
 

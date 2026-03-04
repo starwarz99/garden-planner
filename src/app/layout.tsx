@@ -18,9 +18,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Garden Planner — AI-Powered Companion Planting",
+  title: "Planters Blueprint — AI-Powered Companion Planting",
   description:
-    "Answer 10 questions and Claude AI designs your perfect personalized garden with companion planting, seasonal care, and zone-specific advice.",
+    "Answer 10 questions and AI designs your perfect personalized garden with companion planting, seasonal care, and zone-specific advice.",
   keywords: ["garden planner", "companion planting", "AI garden", "USDA zones"],
 };
 

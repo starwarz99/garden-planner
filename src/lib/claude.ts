@@ -143,7 +143,7 @@ export async function generateGardenDesign(data: WizardData): Promise<GardenDesi
 
   const textBlock = message.content.find((b) => b.type === "text");
   if (!textBlock || textBlock.type !== "text") {
-    throw new Error("No text response from Claude — please try again.");
+    throw new Error("No text response from AI — please try again.");
   }
 
   let raw = textBlock.text.trim();

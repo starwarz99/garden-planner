@@ -18,6 +18,7 @@ const TIERS = [
     tagline: "Start growing",
     features: [
       "1 saved garden",
+      "Gardens up to 20×20 ft",
       "AI-generated layout",
       "Zone-aware plant picker",
       "Companion planting notes",
@@ -40,6 +41,7 @@ const TIERS = [
     tagline: "/ month",
     features: [
       "3 saved gardens",
+      "Gardens up to 40×40 ft",
       "Regenerate designs",
       "Quantity controls (more/less)",
       "Estimated yield info",
@@ -58,6 +60,7 @@ const TIERS = [
     tagline: "/ month",
     features: [
       "5 saved gardens",
+      "Gardens up to 60×60 ft",
       "12-month care calendar",
       "Everything in Grower",
     ],

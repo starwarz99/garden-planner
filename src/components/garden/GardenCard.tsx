@@ -55,10 +55,11 @@ export function GardenCard({ garden, onDelete }: GardenCardProps) {
       <Link href={`/garden/${garden.id}`}>
         <div className="h-40 rounded-xl overflow-hidden mb-3 bg-mint border border-sage/20 flex items-center justify-center relative">
           {garden.svgSnapshot ? (
-            <div
-              dangerouslySetInnerHTML={{ __html: garden.svgSnapshot }}
-              className="w-full h-full scale-50 origin-top-left pointer-events-none"
-              style={{ width: "200%", height: "200%" }}
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(garden.svgSnapshot)}`}
+              className="w-full h-full object-contain"
+              alt={`${garden.name} preview`}
             />
           ) : (
             <div className="text-center text-gray-400">
