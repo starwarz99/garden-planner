@@ -252,16 +252,25 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
             ? tooltip.y - tooltipH - 4
             : tooltip.y + CELL_SIZE + 4;
 
+          const clipId = `tc-${tooltip.cell.plantId}`;
+
           return (
             <g pointerEvents="none">
+              <defs>
+                <clipPath id={clipId}>
+                  <rect x={rectX + pad} y={rectY} width={availW} height={tooltipH} />
+                </clipPath>
+              </defs>
               <rect x={rectX} y={rectY} width={tooltipW} height={tooltipH} rx={6}
                 fill="white" stroke="#2d6a4f" strokeWidth={1.5}
                 filter="drop-shadow(0 2px 4px rgba(0,0,0,0.15))" />
-              <text x={rectX + pad} y={rectY + 18} fontSize={nameFontSize} fontWeight="600" fill="#1a3d2e">
+              <text x={rectX + pad} y={rectY + 18} fontSize={nameFontSize} fontWeight="600" fill="#1a3d2e"
+                clipPath={`url(#${clipId})`}>
                 {nameText}
               </text>
               {noteLines.map((line, i) => (
-                <text key={i} x={rectX + pad} y={rectY + 28 + i * lineH} fontSize={noteSize} fill="#64748b">
+                <text key={i} x={rectX + pad} y={rectY + 28 + i * lineH} fontSize={noteSize} fill="#64748b"
+                  clipPath={`url(#${clipId})`}>
                   {line}
                 </text>
               ))}
