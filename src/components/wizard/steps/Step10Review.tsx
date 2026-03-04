@@ -9,9 +9,10 @@ interface StepProps {
   updateData: <K extends keyof WizardData>(key: K, value: WizardData[K]) => void;
   onGenerate: () => void;
   isGenerating?: boolean;
+  genError?: string | null;
 }
 
-export function Step10Review({ data, updateData, onGenerate, isGenerating }: StepProps) {
+export function Step10Review({ data, updateData, onGenerate, isGenerating, genError }: StepProps) {
   const zone = getZoneById(data.usdaZone);
   const allQuantities: Record<string, PlantQuantity> = {
     ...data.vegetableQuantities,
@@ -97,6 +98,13 @@ export function Step10Review({ data, updateData, onGenerate, isGenerating }: Ste
               {goal.replace("-", " ")}
             </span>
           ))}
+        </div>
+      )}
+
+      {/* Error message */}
+      {genError && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 text-center">
+          {genError}
         </div>
       )}
 

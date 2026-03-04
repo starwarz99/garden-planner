@@ -88,6 +88,7 @@ export function GardenWizard({ onComplete, initialData }: GardenWizardProps) {
           {...props}
           onGenerate={handleGenerate}
           isGenerating={isGenerating}
+          genError={genError}
         />
       );
       default: return null;
@@ -101,13 +102,6 @@ export function GardenWizard({ onComplete, initialData }: GardenWizardProps) {
         totalSteps={totalSteps}
         onStepClick={goToStep}
       />
-
-      {genError && (
-        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 flex items-center justify-between">
-          <span>{genError}</span>
-          <button onClick={() => setGenError(null)} className="font-bold ml-2">×</button>
-        </div>
-      )}
 
       <div className="mt-8 relative">
         <AnimatePresence mode="wait" custom={direction}>
