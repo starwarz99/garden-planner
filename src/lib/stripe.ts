@@ -4,7 +4,7 @@ import Stripe from "stripe";
 // Force the fetch-based HTTP client so Stripe works in Vercel's serverless
 // environment, which restricts Node.js native http/https socket connections.
 export const stripe: Stripe | null = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+  ? new Stripe(process.env.STRIPE_SECRET_KEY.trim(), {
       httpClient: Stripe.createFetchHttpClient(),
     })
   : null;

@@ -9,11 +9,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Stripe not configured" }, { status: 503 });
   }
 
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const webhookSecret = (process.env.STRIPE_WEBHOOK_SECRET ?? "").trim();
   if (!webhookSecret) {
     console.error("STRIPE_WEBHOOK_SECRET is not set");
     return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
   }
+
 
   const rawBody = await req.text();
   const sig = req.headers.get("stripe-signature");
