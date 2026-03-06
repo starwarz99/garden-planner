@@ -30,7 +30,7 @@ export default function WizardResultPage() {
     const ro = new ResizeObserver(([entry]) => setDiagramHeight(entry.contentRect.height));
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [design]); // re-run when design loads so the ref is populated
 
   useEffect(() => {
     const storedDesign = sessionStorage.getItem("gardenDesign");
