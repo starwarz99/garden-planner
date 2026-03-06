@@ -15,6 +15,7 @@ import { Step7Herbs } from "./steps/Step7Herbs";
 import { Step8Flowers } from "./steps/Step8Flowers";
 import { Step9Goals } from "./steps/Step9Goals";
 import { Step10Review } from "./steps/Step10Review";
+import { GeneratingOverlay } from "@/components/GeneratingOverlay";
 import type { GardenDesign, WizardData } from "@/types/garden";
 import { getPlanConfig } from "@/lib/plans";
 
@@ -96,6 +97,8 @@ export function GardenWizard({ onComplete, initialData }: GardenWizardProps) {
   };
 
   return (
+    <>
+    <GeneratingOverlay isVisible={isGenerating} />
     <div className="max-w-2xl mx-auto px-4 py-8">
       <WizardProgress
         currentStep={currentStep}
@@ -148,5 +151,6 @@ export function GardenWizard({ onComplete, initialData }: GardenWizardProps) {
         </div>
       )}
     </div>
+    </>
   );
 }
