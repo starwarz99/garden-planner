@@ -135,44 +135,28 @@ export async function generateGardenDesign(data: WizardData, includeCareCalendar
   const calendarExtra = includeCareCalendar ? 1500 : 0;
   const maxTokens = (cellCount <= 32 ? 2000 : cellCount <= 64 ? 3500 : 6000) + calendarExtra;
 
-  // Retry strategy:
-  // - 529 overloaded: up to 3 attempts (fast to fail, worth retrying)
-  // - timeout: max 1 retry (slow to fail, must fit in Vercel's 60s limit)
+  // Retry up to 3 times on 529 overloaded errors only.
+  // No per-request timeout — the call takes 15-25s normally and adding a timeout
+  // caused more failures than it prevented. Vercel's 60s function limit is the ceiling.
   let message;
-  let timeoutAttempts = 0;
   const maxAttempts = 3;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      message = await anthropic.messages.create(
-        {
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: maxTokens,
-          temperature: 0.2,
-          messages: [{ role: "user", content: prompt }],
-        },
-        { timeout: 30000 }, // 30s per attempt
-      );
+      message = await anthropic.messages.create({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: maxTokens,
+        temperature: 0.2,
+        messages: [{ role: "user", content: prompt }],
+      });
       break;
     } catch (err: unknown) {
       const status = (err as { status?: number }).status;
-      const msg = (err as { message?: string }).message ?? "";
-      const isOverloaded = status === 529;
-      const isTimeout = msg.includes("timeout") || msg.includes("timed out");
-      if (isTimeout) timeoutAttempts++;
-
-      const canRetry =
-        (isOverloaded && attempt < maxAttempts) ||
-        (isTimeout && timeoutAttempts < 2);
-
-      if (canRetry) {
+      if (status === 529 && attempt < maxAttempts) {
         await new Promise((res) => setTimeout(res, attempt * 2000));
         continue;
       }
-      if (isOverloaded) {
+      if (status === 529) {
         throw new Error("The AI service is overloaded right now — please wait a moment and try again.");
-      }
-      if (isTimeout) {
-        throw new Error("The AI is taking too long to respond — please try again.");
       }
       throw new Error("Garden generation failed — please try again.");
     }
