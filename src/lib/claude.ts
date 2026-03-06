@@ -58,7 +58,7 @@ function buildPrompt(data: WizardData, includeCareCalendar: boolean): string {
 ${selectedPlantDetails || "No specific plants requested — choose the best plants for this zone, style, and conditions."}
 
 ## Design Instructions
-1. Create a ${gridCols}×${gridRows} grid array (rows first, then columns). Each cell is either null (empty) or a PlantCell object.
+1. Create a ${gridCols}×${gridRows} grid array (rows first, then columns). Each cell is null, a PlantCell (vegetables), a SubgridCell (herbs/flowers), or a PathCell.
 2. Apply companion planting principles — place good companions adjacent, avoid bad companions.
 3. Group plants into named zones (e.g., "Salad Corner", "Tomato Row", "Pollinator Border").
 4. Place taller plants to the north (if ${data.orientation}-facing) so they don't shade shorter ones.
@@ -84,12 +84,30 @@ ${selectedPlantDetails || "No specific plants requested — choose the best plan
 8. Prioritize plants that fit the zone ${data.usdaZone} — exclude any that won't survive.
 9. Respect quantity preferences: LESS plants get 1–2 cells total; MEDIUM plants get a proportional share; MORE plants should fill as many cells as their spacing allows — they are the garden's dominant plants.
 
+## Cell Types
+There are four cell formats allowed in the grid:
+- **PlantCell** (vegetables): \`{"plantId":"tomato","plantName":"Tomato","emoji":"🍅","zoneColor":"#4ade80","note":"optional"}\`
+- **SubgridCell** (herbs & flowers ONLY): \`{"isSubgrid":true,"plants":[TL,TR,BL,BR]}\` — fits 4 herbs/flowers (1×1 ft each) into one 2×2 ft cell. Each of the 4 slots is a PlantCell or null. You may fill all 4 with the same plant, or mix different herbs/flowers.
+- **PathCell**: \`{"isPath":true,"pathStyle":"straight"}\`
+- **null** (empty)
+
+**IMPORTANT**: Herbs and flowers MUST use SubgridCell format, never a plain PlantCell. Vegetables MUST use plain PlantCell format.
+
 ## Response Format
 Respond with ONLY valid JSON (no markdown code blocks, no extra text):
 
 {
   "grid": [
-    [{"plantId":"tomato","plantName":"Tomato","emoji":"🍅","zoneColor":"#4ade80","note":"Anchor plant"}, {"isPath":true,"pathStyle":"straight"}, null, ...],
+    [
+      {"plantId":"tomato","plantName":"Tomato","emoji":"🍅","zoneColor":"#4ade80","note":"Anchor plant"},
+      {"isSubgrid":true,"plants":[
+        {"plantId":"basil","plantName":"Basil","emoji":"🌿","zoneColor":"#86efac","note":"Repels aphids"},
+        {"plantId":"basil","plantName":"Basil","emoji":"🌿","zoneColor":"#86efac"},
+        {"plantId":"thyme","plantName":"Thyme","emoji":"🌱","zoneColor":"#86efac"},
+        {"plantId":"thyme","plantName":"Thyme","emoji":"🌱","zoneColor":"#86efac"}
+      ]},
+      null, ...
+    ],
     ...
   ],
   "zones": [

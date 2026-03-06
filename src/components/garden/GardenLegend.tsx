@@ -1,9 +1,14 @@
 "use client";
 
-import type { GardenDesign, PlantCell, PathCell } from "@/types/garden";
+import type { GardenDesign, PlantCell, PathCell, SubgridCell } from "@/types/garden";
 
-function isPlantCell(cell: PlantCell | PathCell | null): cell is PlantCell {
+type AnyCell = PlantCell | PathCell | SubgridCell | null;
+
+function isPlantCell(cell: AnyCell): cell is PlantCell {
   return cell !== null && "plantId" in cell;
+}
+function isSubgridCell(cell: AnyCell): cell is SubgridCell {
+  return cell !== null && "isSubgrid" in cell;
 }
 
 interface GardenLegendProps {
@@ -14,20 +19,15 @@ interface GardenLegendProps {
 export function GardenLegend({ design, showYield = true }: GardenLegendProps) {
   // Collect unique plants from grid
   const plantMap = new Map<string, { name: string; emoji: string; zoneColor: string; count: number }>();
+  const addPlant = (p: PlantCell) => {
+    const existing = plantMap.get(p.plantId);
+    if (existing) { existing.count++; }
+    else { plantMap.set(p.plantId, { name: p.plantName, emoji: p.emoji, zoneColor: p.zoneColor, count: 1 }); }
+  };
   design.grid.forEach((row) =>
     row.forEach((cell) => {
-      if (!isPlantCell(cell)) return;
-      const existing = plantMap.get(cell.plantId);
-      if (existing) {
-        existing.count++;
-      } else {
-        plantMap.set(cell.plantId, {
-          name: cell.plantName,
-          emoji: cell.emoji,
-          zoneColor: cell.zoneColor,
-          count: 1,
-        });
-      }
+      if (isPlantCell(cell)) addPlant(cell);
+      else if (isSubgridCell(cell)) cell.plants.forEach((p) => { if (p) addPlant(p); });
     })
   );
 

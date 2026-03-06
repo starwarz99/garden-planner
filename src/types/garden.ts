@@ -94,6 +94,13 @@ export interface PathCell {
   pathStyle: WalkwayStyle;
 }
 
+// Herbs and flowers can share a 2×2 ft cell as four 1×1 ft sub-slots.
+// plants order: [topLeft, topRight, bottomLeft, bottomRight]
+export interface SubgridCell {
+  isSubgrid: true;
+  plants: [PlantCell | null, PlantCell | null, PlantCell | null, PlantCell | null];
+}
+
 export interface GardenZone {
   name: string;
   color: string;
@@ -101,7 +108,7 @@ export interface GardenZone {
 }
 
 export interface GardenDesign {
-  grid: (PlantCell | PathCell | null)[][];   // [row][col], each cell = 2ft × 2ft
+  grid: (PlantCell | PathCell | SubgridCell | null)[][];   // [row][col], each cell = 2ft × 2ft
   zones: GardenZone[];
   companionNotes: string[];
   zoneTips: string[];

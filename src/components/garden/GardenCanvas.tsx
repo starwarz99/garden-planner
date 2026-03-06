@@ -1,13 +1,18 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { GardenDesign, PlantCell, PathCell } from "@/types/garden";
+import type { GardenDesign, PlantCell, PathCell, SubgridCell } from "@/types/garden";
 
-function isPathCell(cell: PlantCell | PathCell | null): cell is PathCell {
+type AnyCell = PlantCell | PathCell | SubgridCell | null;
+
+function isPathCell(cell: AnyCell): cell is PathCell {
   return cell !== null && "isPath" in cell;
 }
-function isPlantCell(cell: PlantCell | PathCell | null): cell is PlantCell {
+function isPlantCell(cell: AnyCell): cell is PlantCell {
   return cell !== null && "plantId" in cell;
+}
+function isSubgridCell(cell: AnyCell): cell is SubgridCell {
+  return cell !== null && "isSubgrid" in cell;
 }
 
 const CELL_SIZE = 44;
@@ -101,6 +106,24 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
                   fill={cell.zoneColor} fillOpacity={0.25} />
               );
             }
+            if (isSubgridCell(cell)) {
+              const sub = cell.plants;
+              const positions = [
+                { dx: 0,           dy: 0            }, // TL
+                { dx: CELL_SIZE/2, dy: 0            }, // TR
+                { dx: 0,           dy: CELL_SIZE/2  }, // BL
+                { dx: CELL_SIZE/2, dy: CELL_SIZE/2  }, // BR
+              ];
+              return (
+                <g key={`zone-${rowIdx}-${colIdx}`}>
+                  {sub.map((p, i) => p ? (
+                    <rect key={i} x={x + positions[i].dx} y={y + positions[i].dy}
+                      width={CELL_SIZE/2} height={CELL_SIZE/2}
+                      fill={p.zoneColor} fillOpacity={0.25} />
+                  ) : null)}
+                </g>
+              );
+            }
             return null;
           })
         )}
@@ -144,35 +167,78 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
         {/* Plant emojis (skip path cells) */}
         {design.grid.map((row, rowIdx) =>
           row.map((cell, colIdx) => {
-            if (!isPlantCell(cell)) return null;
-            const cx = PADDING + colIdx * CELL_SIZE + CELL_SIZE / 2;
-            const cy = PADDING + rowIdx * CELL_SIZE + CELL_SIZE / 2;
+            const cellX = PADDING + colIdx * CELL_SIZE;
+            const cellY = PADDING + rowIdx * CELL_SIZE;
 
-            return (
-              <g key={`plant-${rowIdx}-${colIdx}`}>
-                {/* Zone color dot */}
-                <circle cx={cx} cy={cy} r={CELL_SIZE / 2 - 4}
-                  fill={cell.zoneColor} fillOpacity={0.15}
-                  stroke={cell.zoneColor} strokeWidth={1} strokeOpacity={0.4}
-                />
-                {/* Plant emoji */}
-                <text x={cx} y={cy + 6} textAnchor="middle"
-                  fontSize={CELL_SIZE * 0.5} className="select-none"
-                  style={{ userSelect: "none" }}
-                >
-                  {cell.emoji}
-                </text>
-                {/* Invisible hit area for hover */}
-                <rect
-                  x={PADDING + colIdx * CELL_SIZE} y={PADDING + rowIdx * CELL_SIZE}
-                  width={CELL_SIZE} height={CELL_SIZE}
-                  fill="transparent"
-                  onMouseEnter={() => handleMouseEnter(cell, colIdx, rowIdx)}
-                  onMouseLeave={handleMouseLeave}
-                  className="cursor-pointer"
-                />
-              </g>
-            );
+            if (isPlantCell(cell)) {
+              const cx = cellX + CELL_SIZE / 2;
+              const cy = cellY + CELL_SIZE / 2;
+              return (
+                <g key={`plant-${rowIdx}-${colIdx}`}>
+                  <circle cx={cx} cy={cy} r={CELL_SIZE / 2 - 4}
+                    fill={cell.zoneColor} fillOpacity={0.15}
+                    stroke={cell.zoneColor} strokeWidth={1} strokeOpacity={0.4}
+                  />
+                  <text x={cx} y={cy + 6} textAnchor="middle"
+                    fontSize={CELL_SIZE * 0.5} className="select-none"
+                    style={{ userSelect: "none" }}
+                  >
+                    {cell.emoji}
+                  </text>
+                  <rect x={cellX} y={cellY} width={CELL_SIZE} height={CELL_SIZE}
+                    fill="transparent"
+                    onMouseEnter={() => handleMouseEnter(cell, colIdx, rowIdx)}
+                    onMouseLeave={handleMouseLeave}
+                    className="cursor-pointer"
+                  />
+                </g>
+              );
+            }
+
+            if (isSubgridCell(cell)) {
+              const S = CELL_SIZE / 2; // sub-slot size
+              const positions = [
+                { dx: 0, dy: 0 }, { dx: S, dy: 0 },
+                { dx: 0, dy: S }, { dx: S, dy: S },
+              ];
+              return (
+                <g key={`plant-${rowIdx}-${colIdx}`}>
+                  {/* faint dividing lines within the cell */}
+                  <line x1={cellX + S} y1={cellY} x2={cellX + S} y2={cellY + CELL_SIZE}
+                    stroke="#cbd5e1" strokeWidth={0.5} strokeDasharray="2,2" />
+                  <line x1={cellX} y1={cellY + S} x2={cellX + CELL_SIZE} y2={cellY + S}
+                    stroke="#cbd5e1" strokeWidth={0.5} strokeDasharray="2,2" />
+                  {cell.plants.map((p, i) => {
+                    if (!p) return null;
+                    const { dx, dy } = positions[i];
+                    const scx = cellX + dx + S / 2;
+                    const scy = cellY + dy + S / 2;
+                    return (
+                      <g key={i}>
+                        <circle cx={scx} cy={scy} r={S / 2 - 2}
+                          fill={p.zoneColor} fillOpacity={0.15}
+                          stroke={p.zoneColor} strokeWidth={0.75} strokeOpacity={0.4}
+                        />
+                        <text x={scx} y={scy + 3} textAnchor="middle"
+                          fontSize={S * 0.55} className="select-none"
+                          style={{ userSelect: "none" }}
+                        >
+                          {p.emoji}
+                        </text>
+                        <rect x={cellX + dx} y={cellY + dy} width={S} height={S}
+                          fill="transparent"
+                          onMouseEnter={() => handleMouseEnter(p, colIdx, rowIdx)}
+                          onMouseLeave={handleMouseLeave}
+                          className="cursor-pointer"
+                        />
+                      </g>
+                    );
+                  })}
+                </g>
+              );
+            }
+
+            return null;
           })
         )}
 
