@@ -289,39 +289,89 @@ function buildVegCells(
   return cells;
 }
 
-// ─── SubgridCell position designation ────────────────────────────────────────
+// ─── SubgridCell packing and companion-aware placement ───────────────────────
 
-function designateHerbFlowerPositions(
+interface SubgridSpec {
+  slots: [PlantCell | null, PlantCell | null, PlantCell | null, PlantCell | null];
+  primaryPlantId: string; // used to look up companion vegs
+}
+
+function packIntoSubgridSpecs(subslots: PlantCell[]): SubgridSpec[] {
+  const specs: SubgridSpec[] = [];
+  for (let i = 0; i < subslots.length; i += 4) {
+    specs.push({
+      slots: [
+        subslots[i]     ?? null,
+        subslots[i + 1] ?? null,
+        subslots[i + 2] ?? null,
+        subslots[i + 3] ?? null,
+      ],
+      primaryPlantId: subslots[i].plantId,
+    });
+  }
+  return specs;
+}
+
+// Place each SubgridCell adjacent to one of its companion vegetables.
+// plantIdToPositions maps veg plant IDs to their provisional grid positions.
+function findCompanionSubgridPositions(
+  specs: SubgridSpec[],
+  plantIdToPositions: Map<string, [number, number][]>,
   available: [number, number][],
-  count: number,
-  style: string,
-  rows: number
+  pathMask: boolean[][],
+  gridRows: number,
+  gridCols: number
 ): [number, number][] {
-  if (count === 0) return [];
+  if (specs.length === 0) return [];
 
-  const edgeRows = new Set<number>();
-  if (style === "kitchen") {
-    edgeRows.add(0);
-    if (rows > 2) edgeRows.add(rows - 1);
-  } else if (style === "wildflower") {
-    for (let r = 0; r < rows; r += 2) edgeRows.add(r);
-  } else if (style === "cottage") {
-    edgeRows.add(0);
-    for (let r = 2; r < rows; r += 4) edgeRows.add(r);
-  } else {
-    // formal: border rows only
-    edgeRows.add(0);
-    if (rows > 1) edgeRows.add(rows - 1);
+  const chosen = new Set<string>();
+  const result: [number, number][] = [];
+  const availSet = new Set(available.map(([r, c]) => `${r},${c}`));
+
+  // Orthogonal first (directly adjacent), then diagonal
+  const DIRS = [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [-1, 1], [1, -1], [-1, -1]];
+
+  for (const spec of specs) {
+    const plant = allPlants.find(p => p.id === spec.primaryPlantId);
+    const companionIds = (plant?.companions ?? []).filter(id => plantIdToPositions.has(id));
+
+    let found: [number, number] | null = null;
+
+    // Try cells adjacent to each companion veg position
+    search:
+    for (const companionId of companionIds) {
+      for (const [cr, cc] of (plantIdToPositions.get(companionId) ?? [])) {
+        for (const [dr, dc] of DIRS) {
+          const nr = cr + dr, nc = cc + dc;
+          const key = `${nr},${nc}`;
+          if (
+            nr >= 0 && nr < gridRows &&
+            nc >= 0 && nc < gridCols &&
+            !pathMask[nr][nc] &&
+            availSet.has(key) &&
+            !chosen.has(key)
+          ) {
+            found = [nr, nc];
+            break search;
+          }
+        }
+      }
+    }
+
+    // Fallback: any unchosen available position
+    if (!found) {
+      for (const [r, c] of available) {
+        if (!chosen.has(`${r},${c}`)) { found = [r, c]; break; }
+      }
+    }
+
+    if (found) {
+      chosen.add(`${found[0]},${found[1]}`);
+      result.push(found);
+    }
   }
 
-  const edgePositions = available.filter(([r]) => edgeRows.has(r));
-
-  // If not enough edge positions, pad from anywhere
-  const extra = available
-    .filter(([r, c]) => !edgePositions.some(([er, ec]) => er === r && ec === c))
-    .slice(0, Math.max(0, count - edgePositions.length));
-
-  return [...edgePositions, ...extra].slice(0, count);
+  return result;
 }
 
 // ─── Zones metadata ───────────────────────────────────────────────────────────
@@ -586,20 +636,31 @@ export function generateGardenDesign(
   // Reserve ~3% for air circulation; fill the rest
   const plantableCells = Math.floor(available.length * 0.97);
 
-  // ── Herb/flower SubgridCell packing ──
+  // ── Pack herb/flower subslots into SubgridSpecs ──
   const herbFlowerSubslots = buildHerbFlowerSubslots(herbs, flowers, allQty);
-  const subgridCellCount   = Math.ceil(herbFlowerSubslots.length / 4);
+  const subgridSpecs       = packIntoSubgridSpecs(herbFlowerSubslots);
 
   // ── Vegetable cells ──
-  const vegBudget   = Math.max(0, plantableCells - subgridCellCount);
+  const vegBudget   = Math.max(0, plantableCells - subgridSpecs.length);
   const vegCellList = buildVegCells(vegs, allQty, vegBudget);
 
-  // ── Assign positions ──
-  const herbFlowerPositions = designateHerbFlowerPositions(
-    available, subgridCellCount, data.style, gridRows
+  // ── Build a provisional veg-position map so we know where each veg type
+  //    lands in the grid; used to place herbs/flowers next to their companions ──
+  const plantIdToPositions = new Map<string, [number, number][]>();
+  available.slice(0, vegCellList.length).forEach(([r, c], i) => {
+    const id = vegCellList[i].plantId;
+    if (!plantIdToPositions.has(id)) plantIdToPositions.set(id, []);
+    plantIdToPositions.get(id)!.push([r, c]);
+  });
+
+  // ── Find SubgridCell positions adjacent to companion vegs ──
+  const subgridPositions = findCompanionSubgridPositions(
+    subgridSpecs, plantIdToPositions, available, pathMask, gridRows, gridCols
   );
-  const hfPosKey = new Set(herbFlowerPositions.map(([r, c]) => `${r},${c}`));
-  const vegPositions = available.filter(([r, c]) => !hfPosKey.has(`${r},${c}`));
+
+  // ── Veg positions = available minus the stolen subgrid positions ──
+  const spSet = new Set(subgridPositions.map(([r, c]) => `${r},${c}`));
+  const vegPositions = available.filter(([r, c]) => !spSet.has(`${r},${c}`));
 
   // ── Initialise grid ──
   const grid: AnyCell[][] = Array.from({ length: gridRows }, () =>
@@ -612,16 +673,10 @@ export function generateGardenDesign(
       if (pathMask[r][c])
         grid[r][c] = { isPath: true, pathStyle: data.walkwayStyle };
 
-  // Place SubgridCells
-  for (let i = 0; i < herbFlowerPositions.length; i++) {
-    const [r, c] = herbFlowerPositions[i];
-    const slots: [PlantCell | null, PlantCell | null, PlantCell | null, PlantCell | null] =
-      [null, null, null, null];
-    for (let s = 0; s < 4; s++) {
-      const idx = i * 4 + s;
-      if (idx < herbFlowerSubslots.length) slots[s] = herbFlowerSubslots[idx];
-    }
-    grid[r][c] = { isSubgrid: true, plants: slots };
+  // Place SubgridCells at companion-aware positions
+  for (let i = 0; i < subgridPositions.length; i++) {
+    const [r, c] = subgridPositions[i];
+    grid[r][c] = { isSubgrid: true, plants: subgridSpecs[i].slots };
   }
 
   // Place veg PlantCells
