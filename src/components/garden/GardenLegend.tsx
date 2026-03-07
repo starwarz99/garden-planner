@@ -61,15 +61,23 @@ export function GardenLegend({ design, showYield = true }: GardenLegendProps) {
       <div>
         <h3 className="font-serif font-bold text-gray-800 mb-3">Plants ({plants.length})</h3>
         <div className="grid grid-cols-2 gap-1.5">
-          {plants.map((plant) => (
+          {plants.map((plant) => {
+            const override = overrides[plant.plantId];
+            const emoji = override?.emoji ?? plant.emoji;
+            const bg = override?.bgColor ?? "#f1f5f9";
+            return (
             <div key={plant.name} className="flex items-center gap-1.5 text-sm">
-              <span className="text-lg">{overrides[plant.plantId] ?? plant.emoji}</span>
+              <span className="text-lg w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0"
+                style={{ backgroundColor: bg }}>
+                {emoji}
+              </span>
               <div>
                 <div className="text-xs font-medium text-gray-700">{plant.name}</div>
                 <div className="text-[10px] text-gray-400">{plant.count} cell{plant.count !== 1 ? "s" : ""}</div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

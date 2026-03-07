@@ -175,17 +175,22 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
             if (isPlantCell(cell)) {
               const cx = cellX + CELL_SIZE / 2;
               const cy = cellY + CELL_SIZE / 2;
+              const override = overrides[cell.plantId];
+              const cellEmoji = override?.emoji ?? cell.emoji;
+              const circleFill = override?.bgColor ?? cell.zoneColor;
+              const circleOpacity = override?.bgColor ? 0.8 : 0.15;
+              const strokeOpacity = override?.bgColor ? 0.3 : 0.4;
               return (
                 <g key={`plant-${rowIdx}-${colIdx}`}>
                   <circle cx={cx} cy={cy} r={CELL_SIZE / 2 - 4}
-                    fill={cell.zoneColor} fillOpacity={0.15}
-                    stroke={cell.zoneColor} strokeWidth={1} strokeOpacity={0.4}
+                    fill={circleFill} fillOpacity={circleOpacity}
+                    stroke={circleFill} strokeWidth={1} strokeOpacity={strokeOpacity}
                   />
                   <text x={cx} y={cy + 6} textAnchor="middle"
                     fontSize={CELL_SIZE * 0.5} className="select-none"
                     style={{ userSelect: "none" }}
                   >
-                    {overrides[cell.plantId] ?? cell.emoji}
+                    {cellEmoji}
                   </text>
                   <rect x={cellX} y={cellY} width={CELL_SIZE} height={CELL_SIZE}
                     fill="transparent"
@@ -215,17 +220,22 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
                     const { dx, dy } = positions[i];
                     const scx = cellX + dx + S / 2;
                     const scy = cellY + dy + S / 2;
+                    const pOverride = overrides[p.plantId];
+                    const pEmoji = pOverride?.emoji ?? p.emoji;
+                    const pFill = pOverride?.bgColor ?? p.zoneColor;
+                    const pFillOpacity = pOverride?.bgColor ? 0.8 : 0.15;
+                    const pStrokeOpacity = pOverride?.bgColor ? 0.3 : 0.4;
                     return (
                       <g key={i}>
                         <circle cx={scx} cy={scy} r={S / 2 - 2}
-                          fill={p.zoneColor} fillOpacity={0.15}
-                          stroke={p.zoneColor} strokeWidth={0.75} strokeOpacity={0.4}
+                          fill={pFill} fillOpacity={pFillOpacity}
+                          stroke={pFill} strokeWidth={0.75} strokeOpacity={pStrokeOpacity}
                         />
                         <text x={scx} y={scy + 3} textAnchor="middle"
                           fontSize={S * 0.55} className="select-none"
                           style={{ userSelect: "none" }}
                         >
-                          {overrides[p.plantId] ?? p.emoji}
+                          {pEmoji}
                         </text>
                         <rect x={cellX + dx} y={cellY + dy} width={S} height={S}
                           fill="transparent"
@@ -289,7 +299,7 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
           const noteSize = tooltipW < 105 ? 9 : 10;
 
           // Scale font down for long names rather than clipping
-          const nameText = `${overrides[tooltip.cell.plantId] ?? tooltip.cell.emoji} ${tooltip.cell.plantName}`;
+          const nameText = `${overrides[tooltip.cell.plantId]?.emoji ?? tooltip.cell.emoji} ${tooltip.cell.plantName}`;
           const estNameW = nameText.length * (baseFontSize * 0.62);
           const nameFontSize = estNameW > availW
             ? Math.max(8, Math.floor(baseFontSize * availW / estNameW))

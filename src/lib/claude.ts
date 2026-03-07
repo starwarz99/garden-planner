@@ -3,12 +3,13 @@ import type { WizardData, GardenDesign } from "@/types/garden";
 import { getZoneById } from "@/data/usda-zones";
 import { allPlants } from "@/data/plants";
 import { getPlantIconOverrides } from "@/lib/plant-icons";
+import type { PlantOverride } from "@/lib/plant-icon-config";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY?.trim(),
 });
 
-function buildPrompt(data: WizardData, includeCareCalendar: boolean, iconOverrides: Record<string, string>): string {
+function buildPrompt(data: WizardData, includeCareCalendar: boolean, iconOverrides: Record<string, PlantOverride>): string {
   const zone = getZoneById(data.usdaZone);
   const gridCols = Math.floor(data.widthFt / 2);
   const gridRows = Math.floor(data.lengthFt / 2);
@@ -36,7 +37,7 @@ function buildPrompt(data: WizardData, includeCareCalendar: boolean, iconOverrid
     .filter(Boolean)
     .map((p) => {
       const qty = allQuantities[p!.id] ?? "medium";
-      const emoji = iconOverrides[p!.id] ?? p!.emoji;
+      const emoji = iconOverrides[p!.id]?.emoji ?? p!.emoji;
       return `  - ${emoji} ${p!.name} (${p!.category}, ${p!.spacingFt}ft spacing, zones ${p!.minZone}-${p!.maxZone}, water: ${p!.waterNeeds}) [${quantityHint[qty]}]`;
     })
     .join("\n");

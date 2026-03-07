@@ -133,6 +133,7 @@ model GardenPlant {
 
 model PlantIconOverride {
   plantId   String   @id
-  emoji     String
+  emoji     String?
+  bgColor   String?
   updatedAt DateTime @updatedAt
 }

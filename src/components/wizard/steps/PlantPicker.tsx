@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { Plant, PlantQuantity } from "@/types/garden";
 import { getZoneNumber } from "@/data/usda-zones";
 import { useIconOverrides } from "@/contexts/IconOverridesContext";
+import { DEFAULT_PLANT_BG } from "@/lib/plant-icon-config";
 
 interface PlantPickerProps {
   plants: Plant[];
@@ -75,22 +76,26 @@ export function PlantPicker({
   const renderPlant = (plant: Plant) => {
     const isSelected = selected.includes(plant.id);
     const qty = quantities[plant.id] ?? "medium";
+    const override = overrides[plant.id];
+    const emoji = override?.emoji ?? plant.emoji;
+    const bgColor = override?.bgColor ?? DEFAULT_PLANT_BG[plant.category] ?? "#f0fdf4";
 
     return (
       <button
         key={plant.id}
         onClick={() => toggle(plant.id)}
         title={plant.description}
+        style={!isSelected ? { backgroundColor: bgColor } : undefined}
         className={`
           flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 text-center
           transition-all duration-150
           ${isSelected
             ? "bg-primary text-white border-primary shadow-md"
-            : "border-sage/30 hover:border-primary hover:bg-mint text-gray-700"
+            : "border-sage/30 hover:border-primary text-gray-700"
           }
         `}
       >
-        <span className="text-2xl">{overrides[plant.id] ?? plant.emoji}</span>
+        <span className="text-2xl">{emoji}</span>
         <span className="text-[10px] font-medium leading-tight">{plant.name}</span>
 
         {isSelected && canAdjustQuantity && (
