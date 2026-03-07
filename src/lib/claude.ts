@@ -151,7 +151,10 @@ export async function generateGardenDesign(data: WizardData, includeCareCalendar
   // Scale token budget to grid size — omit careCalendar budget when not needed
   const cellCount = gridCols * gridRows;
   const calendarExtra = includeCareCalendar ? 1500 : 0;
-  const maxTokens = (cellCount <= 32 ? 2000 : cellCount <= 64 ? 3500 : 6000) + calendarExtra;
+  // SubgridCells (herbs/flowers) are ~4× the JSON size of PlantCells, so budgets
+  // need headroom beyond the raw cell count. Haiku generates ~150-200 tok/s so
+  // these stay well under the 60s Vercel function limit.
+  const maxTokens = (cellCount <= 16 ? 2000 : cellCount <= 32 ? 3500 : cellCount <= 64 ? 6000 : 10000) + calendarExtra;
 
   // Retry up to 3 times on 529 overloaded errors only.
   // No per-request timeout — the call takes 15-25s normally and adding a timeout
