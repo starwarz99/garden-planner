@@ -194,6 +194,49 @@ function buildHerbFlowerSubslots(
   return subslots;
 }
 
+// ─── Companion-aware vegetable ordering ──────────────────────────────────────
+// Greedy chain: each next plant is chosen to maximise companion score with
+// the current one, keeping good companions adjacent in the grid fill order.
+
+function sortVegsByCompanion(vegs: Plant[]): Plant[] {
+  if (vegs.length <= 1) return [...vegs];
+
+  const remaining = new Map(vegs.map(v => [v.id, v]));
+  const ordered: Plant[] = [];
+
+  const companionScore = (a: Plant, b: Plant): number => {
+    let score = 0;
+    if ((a.companions ?? []).includes(b.id)) score += 10;
+    if ((a.antagonists ?? []).includes(b.id)) score -= 20;
+    if (getFamily(a.id) === getFamily(b.id)) score += 3; // keep families together
+    return score;
+  };
+
+  // Start with the plant that has the most companions in the selected set
+  let current = [...remaining.values()].reduce((best, p) => {
+    const c = (p.companions ?? []).filter(id => remaining.has(id)).length;
+    const b = (best.companions ?? []).filter(id => remaining.has(id)).length;
+    return c > b ? p : best;
+  });
+
+  while (remaining.size > 0) {
+    ordered.push(current);
+    remaining.delete(current.id);
+    if (remaining.size === 0) break;
+
+    // Pick the best next candidate
+    let best: Plant | null = null;
+    let bestScore = -Infinity;
+    for (const candidate of remaining.values()) {
+      const score = companionScore(current, candidate);
+      if (score > bestScore) { bestScore = score; best = candidate; }
+    }
+    current = best!;
+  }
+
+  return ordered;
+}
+
 // ─── Vegetable cell list ──────────────────────────────────────────────────────
 
 function buildVegCells(
@@ -203,10 +246,8 @@ function buildVegCells(
 ): PlantCell[] {
   if (vegs.length === 0) return [];
 
-  // Group by family so companions end up adjacent in the grid
-  const sorted = [...vegs].sort((a, b) =>
-    getFamily(a.id).localeCompare(getFamily(b.id))
-  );
+  // Order so good companions end up in adjacent grid cells
+  const sorted = sortVegsByCompanion(vegs);
 
   const lookupName = (id: string) => allPlants.find(p => p.id === id)?.name ?? id;
 
@@ -542,8 +583,8 @@ export function generateGardenDesign(
     for (let c = 0; c < gridCols; c++)
       if (!pathMask[r][c]) available.push([r, c]);
 
-  // Reserve ~15% for air circulation (null cells)
-  const plantableCells = Math.floor(available.length * 0.85);
+  // Reserve ~3% for air circulation; fill the rest
+  const plantableCells = Math.floor(available.length * 0.97);
 
   // ── Herb/flower SubgridCell packing ──
   const herbFlowerSubslots = buildHerbFlowerSubslots(herbs, flowers, allQty);
