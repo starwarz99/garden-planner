@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export function Footer() {
   return (
     <footer className="border-t border-sage/20 bg-white/60 mt-16">
@@ -10,9 +12,12 @@ export function Footer() {
           <p className="text-sm text-gray-500">
             AI-powered companion planting · Personalized for your zone
           </p>
-          <p className="text-xs text-gray-400">
-            Powered by AI
-          </p>
+          <div className="flex items-center gap-4 text-xs text-gray-400">
+            <span>Powered by AI</span>
+            <Link href="/privacy" className="hover:text-gray-600 transition-colors">
+              Privacy Policy
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
