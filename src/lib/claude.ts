@@ -2,12 +2,13 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { WizardData, GardenDesign } from "@/types/garden";
 import { getZoneById } from "@/data/usda-zones";
 import { allPlants } from "@/data/plants";
+import { getPlantIconOverrides } from "@/lib/plant-icons";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY?.trim(),
 });
 
-function buildPrompt(data: WizardData, includeCareCalendar: boolean): string {
+function buildPrompt(data: WizardData, includeCareCalendar: boolean, iconOverrides: Record<string, string>): string {
   const zone = getZoneById(data.usdaZone);
   const gridCols = Math.floor(data.widthFt / 2);
   const gridRows = Math.floor(data.lengthFt / 2);
@@ -35,7 +36,8 @@ function buildPrompt(data: WizardData, includeCareCalendar: boolean): string {
     .filter(Boolean)
     .map((p) => {
       const qty = allQuantities[p!.id] ?? "medium";
-      return `  - ${p!.emoji} ${p!.name} (${p!.category}, ${p!.spacingFt}ft spacing, zones ${p!.minZone}-${p!.maxZone}, water: ${p!.waterNeeds}) [${quantityHint[qty]}]`;
+      const emoji = iconOverrides[p!.id] ?? p!.emoji;
+      return `  - ${emoji} ${p!.name} (${p!.category}, ${p!.spacingFt}ft spacing, zones ${p!.minZone}-${p!.maxZone}, water: ${p!.waterNeeds}) [${quantityHint[qty]}]`;
     })
     .join("\n");
 
@@ -144,7 +146,8 @@ The grid must be exactly ${gridRows} rows with exactly ${gridCols} cells per row
 }
 
 export async function generateGardenDesign(data: WizardData, includeCareCalendar = false): Promise<GardenDesign> {
-  const prompt = buildPrompt(data, includeCareCalendar);
+  const iconOverrides = await getPlantIconOverrides();
+  const prompt = buildPrompt(data, includeCareCalendar, iconOverrides);
   const gridCols = Math.floor(data.widthFt / 2);
   const gridRows = Math.floor(data.lengthFt / 2);
 

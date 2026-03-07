@@ -1,6 +1,7 @@
 "use client";
 
 import type { GardenDesign, PlantCell, PathCell, SubgridCell } from "@/types/garden";
+import { useIconOverrides } from "@/contexts/IconOverridesContext";
 
 type AnyCell = PlantCell | PathCell | SubgridCell | null;
 
@@ -17,12 +18,14 @@ interface GardenLegendProps {
 }
 
 export function GardenLegend({ design, showYield = true }: GardenLegendProps) {
+  const overrides = useIconOverrides();
+
   // Collect unique plants from grid
-  const plantMap = new Map<string, { name: string; emoji: string; zoneColor: string; count: number }>();
+  const plantMap = new Map<string, { plantId: string; name: string; emoji: string; zoneColor: string; count: number }>();
   const addPlant = (p: PlantCell) => {
     const existing = plantMap.get(p.plantId);
     if (existing) { existing.count++; }
-    else { plantMap.set(p.plantId, { name: p.plantName, emoji: p.emoji, zoneColor: p.zoneColor, count: 1 }); }
+    else { plantMap.set(p.plantId, { plantId: p.plantId, name: p.plantName, emoji: p.emoji, zoneColor: p.zoneColor, count: 1 }); }
   };
   design.grid.forEach((row) =>
     row.forEach((cell) => {
@@ -60,7 +63,7 @@ export function GardenLegend({ design, showYield = true }: GardenLegendProps) {
         <div className="grid grid-cols-2 gap-1.5">
           {plants.map((plant) => (
             <div key={plant.name} className="flex items-center gap-1.5 text-sm">
-              <span className="text-lg">{plant.emoji}</span>
+              <span className="text-lg">{overrides[plant.plantId] ?? plant.emoji}</span>
               <div>
                 <div className="text-xs font-medium text-gray-700">{plant.name}</div>
                 <div className="text-[10px] text-gray-400">{plant.count} cell{plant.count !== 1 ? "s" : ""}</div>

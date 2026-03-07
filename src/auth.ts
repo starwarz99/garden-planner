@@ -58,14 +58,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user?.id) {
         token.id = user.id;
+        // Track last login on initial sign-in
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { lastLoginAt: new Date() },
+        });
       }
-      // Always re-fetch plan so Stripe subscription changes are reflected immediately
+      // Always re-fetch plan + isAdmin so changes are reflected immediately
       if (token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { plan: true },
+          select: { plan: true, isAdmin: true },
         });
         token.plan = dbUser?.plan ?? "seedling";
+        token.isAdmin = dbUser?.isAdmin ?? false;
       }
       return token;
     },
@@ -74,6 +80,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string;
         session.user.plan = (token.plan as string | undefined) ?? "seedling";
+        session.user.isAdmin = (token.isAdmin as boolean | undefined) ?? false;
       }
       return session;
     },

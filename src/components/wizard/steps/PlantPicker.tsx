@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Plant, PlantQuantity } from "@/types/garden";
 import { getZoneNumber } from "@/data/usda-zones";
+import { useIconOverrides } from "@/contexts/IconOverridesContext";
 
 interface PlantPickerProps {
   plants: Plant[];
@@ -33,6 +34,7 @@ export function PlantPicker({
   onQuantityChange,
   canAdjustQuantity = true,
 }: PlantPickerProps) {
+  const overrides = useIconOverrides();
   const [search, setSearch] = useState("");
 
   const userZoneNum = userZone ? getZoneNumber(userZone) : null;
@@ -88,7 +90,7 @@ export function PlantPicker({
           }
         `}
       >
-        <span className="text-2xl">{plant.emoji}</span>
+        <span className="text-2xl">{overrides[plant.id] ?? plant.emoji}</span>
         <span className="text-[10px] font-medium leading-tight">{plant.name}</span>
 
         {isSelected && canAdjustQuantity && (

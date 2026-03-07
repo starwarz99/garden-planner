@@ -1,6 +1,9 @@
 import Link from "next/link";
+import { auth } from "@/auth";
 
-export function Footer() {
+export async function Footer() {
+  const session = await auth();
+
   return (
     <footer className="border-t border-sage/20 bg-white/60 mt-16">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -17,6 +20,11 @@ export function Footer() {
             <Link href="/privacy" className="hover:text-gray-600 transition-colors">
               Privacy Policy
             </Link>
+            {session?.user?.isAdmin && (
+              <Link href="/admin" className="hover:text-gray-600 transition-colors">
+                Admin
+              </Link>
+            )}
           </div>
         </div>
       </div>

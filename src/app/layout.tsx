@@ -4,6 +4,8 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { SessionProvider } from "next-auth/react";
+import { getPlantIconOverrides } from "@/lib/plant-icons";
+import { IconOverridesProvider } from "@/contexts/IconOverridesContext";
 
 const lora = Lora({
   subsets: ["latin"],
@@ -24,14 +26,18 @@ export const metadata: Metadata = {
   keywords: ["garden planner", "companion planting", "AI garden", "USDA zones"],
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const overrides = await getPlantIconOverrides();
+
   return (
     <html lang="en" className={`${lora.variable} ${inter.variable}`}>
       <body className="antialiased min-h-screen flex flex-col">
         <SessionProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          <IconOverridesProvider overrides={overrides}>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </IconOverridesProvider>
         </SessionProvider>
       </body>
     </html>

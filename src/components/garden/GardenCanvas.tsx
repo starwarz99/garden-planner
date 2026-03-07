@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import type { GardenDesign, PlantCell, PathCell, SubgridCell } from "@/types/garden";
+import { useIconOverrides } from "@/contexts/IconOverridesContext";
 
 type AnyCell = PlantCell | PathCell | SubgridCell | null;
 
@@ -44,6 +45,7 @@ interface TooltipState {
 }
 
 export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture }: GardenCanvasProps) {
+  const overrides = useIconOverrides();
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const gridCols = Math.floor(widthFt / 2);
   const gridRows = Math.floor(lengthFt / 2);
@@ -183,7 +185,7 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
                     fontSize={CELL_SIZE * 0.5} className="select-none"
                     style={{ userSelect: "none" }}
                   >
-                    {cell.emoji}
+                    {overrides[cell.plantId] ?? cell.emoji}
                   </text>
                   <rect x={cellX} y={cellY} width={CELL_SIZE} height={CELL_SIZE}
                     fill="transparent"
@@ -223,7 +225,7 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
                           fontSize={S * 0.55} className="select-none"
                           style={{ userSelect: "none" }}
                         >
-                          {p.emoji}
+                          {overrides[p.plantId] ?? p.emoji}
                         </text>
                         <rect x={cellX + dx} y={cellY + dy} width={S} height={S}
                           fill="transparent"
@@ -287,7 +289,7 @@ export function GardenCanvas({ design, widthFt, lengthFt, orientation, onCapture
           const noteSize = tooltipW < 105 ? 9 : 10;
 
           // Scale font down for long names rather than clipping
-          const nameText = `${tooltip.cell.emoji} ${tooltip.cell.plantName}`;
+          const nameText = `${overrides[tooltip.cell.plantId] ?? tooltip.cell.emoji} ${tooltip.cell.plantName}`;
           const estNameW = nameText.length * (baseFontSize * 0.62);
           const nameFontSize = estNameW > availW
             ? Math.max(8, Math.floor(baseFontSize * availW / estNameW))
