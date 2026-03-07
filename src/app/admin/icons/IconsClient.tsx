@@ -1,12 +1,67 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { Plant } from "@/types/garden";
 
 interface IconsClientProps {
   plants: Plant[];
   overrides: Record<string, string>;
+}
+
+const EMOJI_OPTIONS = [
+  // Vegetables
+  "🍅","🥕","🥦","🌽","🥬","🫑","🧅","🧄","🥔","🍆","🥒","🫛","🥑","🌶️","🍄","🍠","🫚",
+  // Legumes / roots
+  "🫘","🌰","🥜",
+  // Herbs
+  "🌿","🪴","🌱","🍃","🫙","🫖",
+  // Flowers
+  "🌸","🌻","🌺","🌹","🌷","💐","🪻","🌼","🏵️","🌵",
+  // Fruits (that grow in gardens)
+  "🍓","🫐","🍋","🍇","🍈","🍒","🍑","🥝","🍓","🫒",
+  // Nature / general
+  "🌾","🌲","🌳","🍂","🍁","🍀","☘️","🪨","🌊","🐝","🦋","🐛","🪱",
+];
+
+function EmojiPicker({
+  current,
+  onSelect,
+  onClose,
+}: {
+  current: string;
+  onSelect: (emoji: string) => void;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [onClose]);
+
+  return (
+    <div
+      ref={ref}
+      className="absolute z-50 top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg p-2 w-56"
+    >
+      <div className="grid grid-cols-8 gap-0.5">
+        {EMOJI_OPTIONS.map((emoji, i) => (
+          <button
+            key={i}
+            onClick={() => { onSelect(emoji); onClose(); }}
+            className={`text-lg rounded p-0.5 hover:bg-gray-100 transition-colors ${emoji === current ? "bg-primary/10 ring-1 ring-primary" : ""}`}
+            title={emoji}
+          >
+            {emoji}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export function IconsClient({ plants, overrides }: IconsClientProps) {
@@ -16,6 +71,7 @@ export function IconsClient({ plants, overrides }: IconsClientProps) {
   );
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<"idle" | "saved" | "error">("idle");
+  const [openPicker, setOpenPicker] = useState<string | null>(null);
 
   const categories = ["vegetable", "herb", "flower"] as const;
   const categoryLabel: Record<string, string> = {
@@ -23,6 +79,9 @@ export function IconsClient({ plants, overrides }: IconsClientProps) {
     herb: "Herbs",
     flower: "Flowers",
   };
+
+  const set = (plantId: string, emoji: string) =>
+    setValues((prev) => ({ ...prev, [plantId]: emoji }));
 
   const handleSave = async () => {
     setSaving(true);
@@ -47,7 +106,7 @@ export function IconsClient({ plants, overrides }: IconsClientProps) {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">{plants.length} plants — edit emoji to override display</p>
+        <p className="text-sm text-gray-500">{plants.length} plants — click the emoji to pick, or type a custom one</p>
         <div className="flex items-center gap-3">
           {status === "saved" && <span className="text-sm text-green-600 font-medium">Saved!</span>}
           {status === "error" && <span className="text-sm text-red-600 font-medium">Save failed</span>}
@@ -73,13 +132,30 @@ export function IconsClient({ plants, overrides }: IconsClientProps) {
                   key={plant.id}
                   className="flex items-center gap-2 p-2 rounded-lg border border-gray-200 bg-white"
                 >
-                  <span className="text-2xl w-9 text-center">{values[plant.id] ?? plant.emoji}</span>
+                  {/* Clickable emoji opens picker */}
+                  <div className="relative flex-shrink-0">
+                    <button
+                      onClick={() => setOpenPicker(openPicker === plant.id ? null : plant.id)}
+                      className="text-2xl w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors border border-transparent hover:border-gray-200"
+                      title="Click to choose emoji"
+                    >
+                      {values[plant.id] ?? plant.emoji}
+                    </button>
+                    {openPicker === plant.id && (
+                      <EmojiPicker
+                        current={values[plant.id] ?? plant.emoji}
+                        onSelect={(emoji) => set(plant.id, emoji)}
+                        onClose={() => setOpenPicker(null)}
+                      />
+                    )}
+                  </div>
+
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-medium text-gray-700 truncate">{plant.name}</div>
                     <input
                       type="text"
                       value={values[plant.id] ?? plant.emoji}
-                      onChange={(e) => setValues((prev) => ({ ...prev, [plant.id]: e.target.value }))}
+                      onChange={(e) => set(plant.id, e.target.value)}
                       className="mt-0.5 w-full text-sm border border-gray-200 rounded px-1.5 py-0.5 focus:border-primary focus:outline-none"
                       maxLength={8}
                     />
