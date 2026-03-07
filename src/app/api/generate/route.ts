@@ -1,8 +1,10 @@
 import { auth } from "@/auth";
-import { generateGardenDesign } from "@/lib/garden-generator";
+import { generateGardenDesign } from "@/lib/claude";
 import { getPlanConfig } from "@/lib/plans";
 import { wizardDataSchema } from "@/lib/validations";
 import { NextResponse } from "next/server";
+
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   try {
