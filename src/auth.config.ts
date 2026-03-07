@@ -1,5 +1,6 @@
 import type { NextAuthConfig } from "next-auth";
 import Google from "next-auth/providers/google";
+import Facebook from "next-auth/providers/facebook";
 import Credentials from "next-auth/providers/credentials";
 
 /**
@@ -12,6 +13,11 @@ export const authConfig: NextAuthConfig = {
     Google({
       clientId: process.env.AUTH_GOOGLE_ID!,
       clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+      allowDangerousEmailAccountLinking: true,
+    }),
+    Facebook({
+      clientId: process.env.AUTH_FACEBOOK_ID!,
+      clientSecret: process.env.AUTH_FACEBOOK_SECRET!,
       allowDangerousEmailAccountLinking: true,
     }),
     // Credentials provider stub — actual validation is in auth.ts

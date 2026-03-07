@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { authConfig } from "./auth.config";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
+import Facebook from "next-auth/providers/facebook";
 import bcrypt from "bcryptjs";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -14,6 +15,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: process.env.AUTH_GOOGLE_ID!,
       clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+      allowDangerousEmailAccountLinking: true,
+    }),
+    Facebook({
+      clientId: process.env.AUTH_FACEBOOK_ID!,
+      clientSecret: process.env.AUTH_FACEBOOK_SECRET!,
       allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
