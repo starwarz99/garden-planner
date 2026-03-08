@@ -31,7 +31,7 @@ const features = [
   {
     emoji: "💾",
     title: "Save & Compare",
-    description: "Save unlimited garden designs, revisit them any time, and iterate until perfect.",
+    description: "Save garden designs, revisit them any time, and iterate until perfect.",
   },
 ];
 
