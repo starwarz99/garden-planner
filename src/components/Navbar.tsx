@@ -33,28 +33,11 @@ export async function Navbar() {
         <div className="flex items-center gap-3">
           {session?.user ? (
             <>
-              {gardensFull ? (
-                <div className="relative group">
-                  <span className="px-4 py-2 bg-gray-300 text-gray-500 text-sm font-semibold rounded-lg cursor-not-allowed select-none">
-                    + New Garden
-                  </span>
-                  <div className="absolute right-0 top-full mt-2 px-3 py-1.5 bg-gray-800 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                    No more gardens available
-                    <div className="absolute -top-1 right-4 w-2 h-2 bg-gray-800 rotate-45" />
-                  </div>
-                </div>
-              ) : (
-                <Link
-                  href="/wizard"
-                  className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  + New Garden
-                </Link>
-              )}
               <NavDropdown
                 userName={session.user.name}
                 userImage={session.user.image}
                 isAdmin={session.user.isAdmin}
+                gardensFull={gardensFull}
                 signOutAction={signOutAction}
               />
             </>

@@ -43,6 +43,10 @@ export default async function PricingPage() {
               q: "Can I switch between Grower and Harvest?",
               a: "Absolutely. Use the billing portal to upgrade or downgrade at any time. Proration is handled automatically by Stripe.",
             },
+            {
+              q: "Why isn't this completely free?",
+              a: "Each garden design is generated in real time by an AI model that analyses your specific zone, soil, sun exposure, plant selections, and layout preferences. That AI processing has a cost per request, which is why fully custom designs require a paid plan. The free Seedling tier lets you experience the core tool before committing.",
+            },
           ].map(({ q, a }) => (
             <div key={q} className="card">
               <div className="font-semibold text-gray-800 mb-1">{q}</div>

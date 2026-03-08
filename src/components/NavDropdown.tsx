@@ -7,6 +7,7 @@ interface NavDropdownProps {
   userName?: string | null;
   userImage?: string | null;
   isAdmin?: boolean;
+  gardensFull?: boolean;
   signOutAction: () => Promise<void>;
 }
 
@@ -20,7 +21,7 @@ function UserIcon() {
   );
 }
 
-export function NavDropdown({ userName, userImage, isAdmin, signOutAction }: NavDropdownProps) {
+export function NavDropdown({ userName, userImage, isAdmin, gardensFull, signOutAction }: NavDropdownProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -62,6 +63,17 @@ export function NavDropdown({ userName, userImage, isAdmin, signOutAction }: Nav
             </>
           )}
           <div className="py-1">
+            {gardensFull ? (
+              <div className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-400 cursor-not-allowed"
+                title="No more gardens available on your current plan">
+                <span>＋</span> New Garden <span className="ml-auto text-[10px] bg-gray-100 rounded px-1">limit reached</span>
+              </div>
+            ) : (
+              <Link href="/wizard" onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/5 transition-colors">
+                <span>＋</span> New Garden
+              </Link>
+            )}
             <Link href="/dashboard" onClick={() => setOpen(false)}
               className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors">
               <span>🌿</span> My Gardens
