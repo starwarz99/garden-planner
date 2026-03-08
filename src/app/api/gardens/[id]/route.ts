@@ -37,7 +37,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   }
 
   const body = await req.json();
-  const { name, svgSnapshot, isPublic } = body;
+  const { name, svgSnapshot, isPublic, designJson } = body;
 
   const updated = await prisma.garden.update({
     where: { id },
@@ -45,6 +45,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       ...(name !== undefined && { name }),
       ...(svgSnapshot !== undefined && { svgSnapshot }),
       ...(isPublic !== undefined && { isPublic }),
+      ...(designJson !== undefined && { designJson }),
     },
   });
 

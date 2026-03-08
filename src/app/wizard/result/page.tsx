@@ -21,8 +21,10 @@ export default function WizardResultPage() {
   const [savedId, setSavedId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const diagramRef = useRef<HTMLDivElement>(null);
   const [diagramHeight, setDiagramHeight] = useState<number | undefined>(undefined);
+  const hasSavedRef = useRef(false);
 
   useEffect(() => {
     const el = diagramRef.current;
@@ -30,7 +32,7 @@ export default function WizardResultPage() {
     const ro = new ResizeObserver(([entry]) => setDiagramHeight(entry.contentRect.height));
     ro.observe(el);
     return () => ro.disconnect();
-  }, [design]); // re-run when design loads so the ref is populated
+  }, [design]);
 
   useEffect(() => {
     const storedDesign = sessionStorage.getItem("gardenDesign");
@@ -49,6 +51,61 @@ export default function WizardResultPage() {
     }
   }, [router]);
 
+  const captureSvg = (): string | null => {
+    const svgEl = document.getElementById("garden-canvas-svg") as SVGSVGElement | null;
+    if (!svgEl) return null;
+    const { width, height } = svgEl.getBoundingClientRect();
+    const clone = svgEl.cloneNode(true) as SVGSVGElement;
+    clone.setAttribute("width", String(Math.round(width)));
+    clone.setAttribute("height", String(Math.round(height)));
+    return new XMLSerializer().serializeToString(clone);
+  };
+
+  const doSave = async (d: GardenDesign, w: WizardData, existingId?: string | null) => {
+    setIsSaving(true);
+    setError(null);
+    try {
+      const svgSnapshot = captureSvg();
+
+      if (existingId) {
+        const res = await fetch(`/api/gardens/${existingId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ designJson: d, svgSnapshot }),
+        });
+        if (!res.ok) throw new Error("Update failed — please try again.");
+      } else {
+        const res = await fetch("/api/gardens", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: w.name, wizardData: w, designJson: d, svgSnapshot }),
+        });
+        if (!res.ok) {
+          let msg = "Save failed — please try again.";
+          try { const err = await res.json(); if (err.error) msg = err.error; } catch {}
+          throw new Error(msg);
+        }
+        const result = await res.json();
+        setSavedId(result.garden.id);
+      }
+      setSaved(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Save failed");
+      hasSavedRef.current = false; // allow retry on next render
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Auto-save when design first loads from sessionStorage
+  useEffect(() => {
+    if (!design || !wizardData || hasSavedRef.current) return;
+    hasSavedRef.current = true;
+    void doSave(design, wizardData);
+    // doSave is intentionally omitted from deps — hasSavedRef guards against re-runs
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [design, wizardData]);
+
   const handleRegenerate = async () => {
     if (!wizardData) return;
     setIsGenerating(true);
@@ -63,68 +120,21 @@ export default function WizardResultPage() {
 
       if (!res.ok) {
         let errorMsg = "Generation failed — please try again.";
-        try {
-          const err = await res.json();
-          if (err.error) errorMsg = err.error;
-        } catch {}
+        try { const err = await res.json(); if (err.error) errorMsg = err.error; } catch {}
         throw new Error(errorMsg);
       }
 
       const result = await res.json();
-      setDesign(result.design);
-      sessionStorage.setItem("gardenDesign", JSON.stringify(result.design));
-      setSaved(false);
+      const newDesign: GardenDesign = result.design;
+      setDesign(newDesign);
+      sessionStorage.setItem("gardenDesign", JSON.stringify(newDesign));
+
+      // Update the already-saved garden with the new design
+      await doSave(newDesign, wizardData, savedId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Regeneration failed");
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!design || !wizardData) return;
-    setIsSaving(true);
-    setError(null);
-
-    try {
-      // Capture SVG snapshot with explicit dimensions for thumbnail rendering
-      let svgSnapshot: string | null = null;
-      const svgEl = document.getElementById("garden-canvas-svg") as SVGSVGElement | null;
-      if (svgEl) {
-        const { width, height } = svgEl.getBoundingClientRect();
-        const clone = svgEl.cloneNode(true) as SVGSVGElement;
-        clone.setAttribute("width", String(Math.round(width)));
-        clone.setAttribute("height", String(Math.round(height)));
-        svgSnapshot = new XMLSerializer().serializeToString(clone);
-      }
-
-      const res = await fetch("/api/gardens", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: wizardData.name,
-          wizardData,
-          designJson: design,
-          svgSnapshot,
-        }),
-      });
-
-      if (!res.ok) {
-        let errorMsg = "Save failed — please try again.";
-        try {
-          const err = await res.json();
-          if (err.error) errorMsg = err.error;
-        } catch {}
-        throw new Error(errorMsg);
-      }
-
-      const result = await res.json();
-      setSaved(true);
-      setSavedId(result.garden.id);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -133,6 +143,39 @@ export default function WizardResultPage() {
   return (
     <div className="min-h-screen bg-mint/20">
       <GeneratingOverlay isVisible={isGenerating} />
+
+      {/* Zoom Modal */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 flex flex-col"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div className="flex items-center justify-between px-4 py-3 shrink-0">
+            <span className="text-white font-semibold text-sm">{wizardData.name}</span>
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="text-white/70 hover:text-white text-3xl leading-none px-2"
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
+          <div
+            className="flex-1 overflow-auto p-4"
+            style={{ touchAction: "manipulation" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ minWidth: 640 }}>
+              <GardenCanvas
+                design={design}
+                widthFt={wizardData.widthFt}
+                lengthFt={wizardData.lengthFt}
+                orientation={wizardData.orientation}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
@@ -145,7 +188,7 @@ export default function WizardResultPage() {
               {wizardData.widthFt}×{wizardData.lengthFt} ft · Zone {wizardData.usdaZone} · {wizardData.style} style
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
             {planConfig.canRegenerate ? (
               <button
                 onClick={handleRegenerate}
@@ -166,22 +209,16 @@ export default function WizardResultPage() {
                 </div>
               </div>
             )}
-            {saved && savedId ? (
+            {isSaving ? (
+              <span className="text-sm text-gray-400 animate-pulse">Saving…</span>
+            ) : saved && savedId ? (
               <a
                 href={`/garden/${savedId}`}
                 className="px-4 py-2 bg-green-500 text-white font-medium rounded-xl hover:bg-green-600 transition-colors"
               >
-                ✓ Saved — View Garden
+                ✓ View Garden
               </a>
-            ) : (
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="px-4 py-2 bg-harvest text-primary font-bold rounded-xl hover:bg-harvest/90 disabled:opacity-50 transition-colors"
-              >
-                {isSaving ? "Saving…" : "💾 Save Garden"}
-              </button>
-            )}
+            ) : null}
           </div>
         </div>
 
@@ -200,6 +237,12 @@ export default function WizardResultPage() {
               lengthFt={wizardData.lengthFt}
               orientation={wizardData.orientation}
             />
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="mt-2 text-xs text-gray-400 hover:text-primary transition-colors flex items-center gap-1"
+            >
+              🔍 View larger / zoom
+            </button>
           </div>
           <div style={{ height: diagramHeight ?? "auto" }} className="card overflow-hidden">
             <div className="h-full overflow-y-auto">
@@ -223,7 +266,7 @@ export default function WizardResultPage() {
           </div>
         )}
 
-        {/* Back to wizard */}
+        {/* Bottom nav */}
         <div className="mt-6 flex justify-between">
           <button
             onClick={() => router.push("/wizard")}
