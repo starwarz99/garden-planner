@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { auth } from "@/auth";
-import { signOut } from "@/auth";
+import { auth, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getPlanConfig } from "@/lib/plans";
+import { NavDropdown } from "@/components/NavDropdown";
 
 export async function Navbar() {
   const session = await auth();
@@ -17,6 +17,11 @@ export async function Navbar() {
     gardensFull = gardenCount >= planConfig.maxGardens;
   }
 
+  const signOutAction = async () => {
+    "use server";
+    await signOut({ redirectTo: "/" });
+  };
+
   return (
     <nav className="sticky top-0 z-40 bg-white/90 backdrop-blur-sm border-b border-sage/20 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -25,27 +30,9 @@ export async function Navbar() {
           <span>Planters Blueprint</span>
         </Link>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {session?.user ? (
             <>
-              <Link
-                href="/dashboard"
-                className="text-sm font-medium text-gray-700 hover:text-primary transition-colors"
-              >
-                My Gardens
-              </Link>
-              <Link
-                href="/account"
-                className="text-sm font-medium text-gray-700 hover:text-primary transition-colors"
-              >
-                My Account
-              </Link>
-              <Link
-                href="/pricing"
-                className="text-sm font-medium text-gray-700 hover:text-primary transition-colors"
-              >
-                Pricing
-              </Link>
               {gardensFull ? (
                 <div className="relative group">
                   <span className="px-4 py-2 bg-gray-300 text-gray-500 text-sm font-semibold rounded-lg cursor-not-allowed select-none">
@@ -64,19 +51,12 @@ export async function Navbar() {
                   + New Garden
                 </Link>
               )}
-              <form
-                action={async () => {
-                  "use server";
-                  await signOut({ redirectTo: "/" });
-                }}
-              >
-                <button
-                  type="submit"
-                  className="text-sm text-gray-500 hover:text-gray-800 transition-colors cursor-pointer"
-                >
-                  Sign out
-                </button>
-              </form>
+              <NavDropdown
+                userName={session.user.name}
+                userImage={session.user.image}
+                isAdmin={session.user.isAdmin}
+                signOutAction={signOutAction}
+              />
             </>
           ) : (
             <>
