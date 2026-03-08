@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 const features = [
   {
@@ -44,6 +45,12 @@ const steps = [
 export default async function HomePage() {
   const session = await auth();
 
+  let hasGardens = false;
+  if (session?.user?.id) {
+    const count = await prisma.garden.count({ where: { userId: session.user.id } });
+    hasGardens = count > 0;
+  }
+
   return (
     <div>
       {/* Hero */}
@@ -78,10 +85,10 @@ export default async function HomePage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href={session ? "/wizard" : "/auth/register"}
+              href={hasGardens ? "/dashboard" : session ? "/wizard" : "/auth/register"}
               className="px-8 py-4 bg-harvest text-primary font-bold rounded-2xl hover:bg-harvest/90 shadow-xl hover:shadow-2xl transition-all text-lg"
             >
-              🌻 Plan My Garden Free
+              {hasGardens ? "🌿 View My Gardens" : "🌻 Plan My Garden Free"}
             </Link>
             {!session && (
               <Link
@@ -147,11 +154,11 @@ export default async function HomePage() {
             Join thousands of gardeners using AI to grow more, stress less.
           </p>
           <Link
-            href={session ? "/wizard" : "/auth/register"}
+            href={hasGardens ? "/dashboard" : session ? "/wizard" : "/auth/register"}
             className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-white font-bold rounded-2xl hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all text-lg"
           >
-            <span>✨</span>
-            {session ? "Create a New Garden" : "Get Started Free"}
+            <span>{hasGardens ? "🌿" : "✨"}</span>
+            {hasGardens ? "My Gardens" : session ? "Create a New Garden" : "Get Started Free"}
           </Link>
         </div>
       </section>
