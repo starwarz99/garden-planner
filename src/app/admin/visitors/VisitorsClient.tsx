@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { relativeTime, formatDuration, shortTime } from "./helpers";
 
 export interface SessionSummary {
@@ -30,7 +31,11 @@ const planBadge: Record<string, string> = {
 };
 
 export function VisitorsClient({ sessions }: { sessions: SessionSummary[] }) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const refresh = () => startTransition(() => router.refresh());
 
   const toggle = (id: string) =>
     setExpanded((prev) => {
@@ -40,6 +45,25 @@ export function VisitorsClient({ sessions }: { sessions: SessionSummary[] }) {
     });
 
   return (
+    <div>
+      {/* Header with refresh button */}
+      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+        <h2 className="font-semibold text-gray-800">
+          Sessions
+          <span className="ml-2 text-xs font-normal text-gray-400">
+            (last 5 days · click a row to see pages visited)
+          </span>
+        </h2>
+        <button
+          onClick={refresh}
+          disabled={isPending}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
+        >
+          <span className={isPending ? "animate-spin inline-block" : ""}>↻</span>
+          {isPending ? "Refreshing…" : "Refresh"}
+        </button>
+      </div>
+
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
@@ -192,6 +216,7 @@ export function VisitorsClient({ sessions }: { sessions: SessionSummary[] }) {
           )}
         </tbody>
       </table>
+    </div> {/* overflow-x-auto */}
     </div>
   );
 }

@@ -92,14 +92,6 @@ export default async function AdminVisitorsPage() {
       </div>
 
       <div className="card p-0 overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-800">
-            Sessions
-            <span className="ml-2 text-xs font-normal text-gray-400">
-              (last 5 days · click a row to see pages visited)
-            </span>
-          </h2>
-        </div>
         <VisitorsClient sessions={sessions} />
       </div>
     </div>
