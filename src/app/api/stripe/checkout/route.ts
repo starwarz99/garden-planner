@@ -46,22 +46,31 @@ export async function POST(req: Request) {
     // If user already has an active subscription, upgrade/downgrade it in-place.
     // This cancels the old plan automatically and prorates the billing.
     if (user.stripeSubscriptionId) {
-      const existing = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
-      if (["active", "trialing"].includes(existing.status)) {
-        const itemId = existing.items.data[0]?.id;
-        if (itemId) {
-          await stripe.subscriptions.update(user.stripeSubscriptionId, {
-            items: [{ id: itemId, price: priceConfig.priceId }],
-            proration_behavior: "always_invoice",
-            metadata: { userId: session.user.id, plan },
-          });
-          // Update DB immediately — webhook will also confirm
-          await prisma.user.update({
-            where: { id: session.user.id },
-            data: { plan, stripePriceId: priceConfig.priceId },
-          });
-          return NextResponse.json({ url: `${origin}/account?billing=success` });
+      try {
+        const existing = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+        if (["active", "trialing"].includes(existing.status)) {
+          const itemId = existing.items.data[0]?.id;
+          if (itemId) {
+            await stripe.subscriptions.update(user.stripeSubscriptionId, {
+              items: [{ id: itemId, price: priceConfig.priceId }],
+              proration_behavior: "always_invoice",
+              metadata: { userId: session.user.id, plan },
+            });
+            // Update DB immediately — webhook will also confirm
+            await prisma.user.update({
+              where: { id: session.user.id },
+              data: { plan, stripePriceId: priceConfig.priceId },
+            });
+            return NextResponse.json({ url: `${origin}/account?billing=success` });
+          }
         }
+      } catch {
+        // Subscription not found in this Stripe environment (stale test-mode ID).
+        // Clear it and fall through to a fresh checkout session.
+        await prisma.user.update({
+          where: { id: session.user.id },
+          data: { stripeSubscriptionId: null, stripePriceId: null, stripeCustomerId: null },
+        });
       }
     }
 
