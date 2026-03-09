@@ -399,8 +399,8 @@ const GOOD_PAIRS = [["🍅","🌿"],["🥕","🧅"],["🥦","🌸"],["🌶️","
 function drawVideo3(ctx: CanvasRenderingContext2D, t: number) {
   ctx.clearRect(0, 0, V1W, V1H);
 
-  // ── Scene 1: Hook 0-2.8s ──────────────────────────────────────────────────
-  if (t < 3.0) {
+  // ── Scene 1: Hook 0-5s (holds 2s after animation completes) ──────────────
+  if (t < 5.2) {
     const bg = ctx.createLinearGradient(0, 0, 0, V1H);
     bg.addColorStop(0, "#1a4721"); bg.addColorStop(1, C.green);
     ctx.fillStyle = bg; ctx.fillRect(0, 0, V1W, V1H);
@@ -411,7 +411,7 @@ function drawVideo3(ctx: CanvasRenderingContext2D, t: number) {
     for (let y = 0; y < V1H; y += 80) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(V1W,y); ctx.stroke(); }
     ctx.restore();
 
-    const fadeOut = 1 - prog(t, 2.5, 3.0);
+    const fadeOut = 1 - prog(t, 4.5, 5.0); // was 2.5-3.0, now holds 2s longer
 
     // "Are you a" — slides down from above
     const line1A = progOut(t, 0.1, 0.7) * fadeOut;
@@ -452,21 +452,21 @@ function drawVideo3(ctx: CanvasRenderingContext2D, t: number) {
     });
   }
 
-  // ── Scene 2: Pain points 2.8-8s ──────────────────────────────────────────
-  if (t >= 2.6 && t < 8.5) {
-    const bgA = prog(t, 2.6, 3.4);
+  // ── Scene 2: Pain points 4.6-10.5s ───────────────────────────────────────
+  if (t >= 4.6 && t < 10.5) {
+    const bgA = prog(t, 4.6, 5.4);
     ctx.fillStyle = lerpHex(C.green, "#fffbeb", bgA);
     ctx.fillRect(0, 0, V1W, V1H);
 
-    const titleA = prog(t, 3.2, 4.0) * (1 - prog(t, 7.8, 8.4));
+    const titleA = prog(t, 5.2, 6.0) * (1 - prog(t, 9.8, 10.4));
     txt(ctx, "Sound familiar?", V1W/2, 110, 52, C.green, true, "center", titleA);
 
     const cW = 920, cH = 164, cX = (V1W - cW) / 2;
 
     PAIN_POINTS.forEach((pt, i) => {
-      const appear = 3.6 + i * 0.85;
+      const appear = 5.6 + i * 0.85;
       const slideP = progOut(t, appear, appear + 0.5);
-      const cA = slideP * (1 - prog(t, 7.6, 8.3));
+      const cA = slideP * (1 - prog(t, 9.6, 10.3));
       if (cA <= 0) return;
 
       const cy = 210 + i * (cH + 18);
@@ -490,43 +490,43 @@ function drawVideo3(ctx: CanvasRenderingContext2D, t: number) {
     });
   }
 
-  // ── Scene 3: Solution reveal 8-10s ────────────────────────────────────────
-  if (t >= 7.8 && t < 10.5) {
-    const inA  = prog(t, 7.8, 8.8);
-    const outA = 1 - prog(t, 10.0, 10.5);
+  // ── Scene 3: Solution reveal 9.6-14.5s (holds 2s after checklist) ────────
+  if (t >= 9.6 && t < 14.5) {
+    const inA  = prog(t, 9.6, 10.6);
+    const outA = 1 - prog(t, 13.5, 14.5); // was 10.0-10.5, now holds 2s longer
     const a = Math.min(inA, outA);
 
     ctx.fillStyle = `rgba(26,71,33,${a * 0.97})`;
     ctx.fillRect(0, 0, V1W, V1H);
 
     // Burst ring
-    const burstR = lerp(0, 500, easeOut(prog(t, 7.8, 9.0)));
-    ctx.save(); ctx.globalAlpha = a * lerp(0.4, 0, prog(t, 8.2, 9.5));
+    const burstR = lerp(0, 500, easeOut(prog(t, 9.6, 10.8)));
+    ctx.save(); ctx.globalAlpha = a * lerp(0.4, 0, prog(t, 10.0, 11.3));
     ctx.strokeStyle = C.harvest; ctx.lineWidth = 4;
     ctx.beginPath(); ctx.arc(V1W/2, V1H/2, burstR, 0, Math.PI*2); ctx.stroke();
     ctx.restore();
 
-    const logoScl = lerp(0.3, 1, easeOut(prog(t, 7.9, 8.7)));
+    const logoScl = lerp(0.3, 1, easeOut(prog(t, 9.7, 10.5)));
     ctx.save(); ctx.translate(V1W/2, V1H/2 - 130); ctx.scale(logoScl, logoScl);
     em(ctx, "🌱", 0, 0, 140, a); ctx.restore();
 
-    txt(ctx, "Meet Planters Blueprint", V1W/2, V1H/2 + 30, 58, C.white, true, "center", a * prog(t, 8.2, 9.0));
-    txt(ctx, "The AI-powered garden designer", V1W/2, V1H/2 + 104, 30, C.mintDark, false, "center", a * prog(t, 8.5, 9.3));
+    txt(ctx, "Meet Planters Blueprint", V1W/2, V1H/2 + 30, 58, C.white, true, "center", a * prog(t, 10.0, 10.8));
+    txt(ctx, "The AI-powered garden designer", V1W/2, V1H/2 + 104, 30, C.mintDark, false, "center", a * prog(t, 10.3, 11.1));
 
     // Check list
     ["Designed for your exact zone & soil","Companion planting built in","Free to start — no credit card"].forEach((line, i) => {
-      const lA = a * prog(t, 8.8 + i*0.25, 9.6 + i*0.25);
+      const lA = a * prog(t, 10.6 + i*0.25, 11.4 + i*0.25);
       txt(ctx, `✅  ${line}`, V1W/2, V1H/2 + 190 + i*52, 24, C.mintDark, false, "center", lA);
     });
   }
 
-  // ── Scene 4: Feature grid 10-16s ─────────────────────────────────────────
-  if (t >= 10.0) {
-    const bgA = prog(t, 10.0, 10.8);
+  // ── Scene 4: Feature grid 14.0-21s ───────────────────────────────────────
+  if (t >= 13.5) {
+    const bgA = prog(t, 13.5, 14.3);
     ctx.fillStyle = lerpHex(C.green, C.mint, bgA);
     ctx.fillRect(0, 0, V1W, V1H);
 
-    const titleA = prog(t, 10.2, 11.0) * (1 - prog(t, 16.2, 16.8));
+    const titleA = prog(t, 13.8, 14.6) * (1 - prog(t, 20.2, 20.8));
     txt(ctx, "Here's what you get", V1W/2, 96, 50, C.green, true, "center", titleA);
 
     // 2×2 feature cards
@@ -537,8 +537,8 @@ function drawVideo3(ctx: CanvasRenderingContext2D, t: number) {
     V3_FEATURES.forEach((f, i) => {
       const col = i%2, row = Math.floor(i/2);
       const cx = gx + col*(cW+gap), cy = gy + row*(cH+gap);
-      const fA = prog(t, 10.6 + i*0.4, 11.4 + i*0.4) * (1-prog(t, 16.0, 16.7));
-      const scl = lerp(0.85, 1, easeOut(prog(t, 10.6+i*0.4, 11.2+i*0.4)));
+      const fA = prog(t, 14.2 + i*0.4, 15.0 + i*0.4) * (1-prog(t, 20.0, 20.7));
+      const scl = lerp(0.85, 1, easeOut(prog(t, 14.2+i*0.4, 14.8+i*0.4)));
       if (fA <= 0) return;
 
       ctx.save(); ctx.globalAlpha = fA;
@@ -557,7 +557,6 @@ function drawVideo3(ctx: CanvasRenderingContext2D, t: number) {
       ctx.textAlign = "left"; ctx.textBaseline = "middle";
       ctx.fillText(f.title, cx+20, cy+140);
       ctx.fillStyle = C.gray; ctx.font = `19px "Arial",sans-serif`;
-      // Word-wrap the sub text
       ctx.fillText(f.sub, cx+20, cy+180);
 
       // Mini visual for companion pairing card
@@ -581,33 +580,36 @@ function drawVideo3(ctx: CanvasRenderingContext2D, t: number) {
     });
 
     // Companion notes bottom strip
-    const stripA = prog(t, 13.5, 14.5) * (1-prog(t, 16.0, 16.7));
+    const stripA = prog(t, 17.0, 18.0) * (1-prog(t, 20.0, 20.7));
     if (stripA > 0) {
       rr(ctx, 40, gy+gridH+28, V1W-80, 56, 14, C.green+"22");
       txt(ctx, "🌱  Free to start  ·  No credit card required  ·  Takes 2 minutes", V1W/2, gy+gridH+56, 22, C.green, false, "center", stripA);
     }
   }
 
-  // ── Scene 5: CTA 16.2-18s ────────────────────────────────────────────────
-  if (t >= 16.0) {
-    const a = prog(t, 16.0, 17.0);
+  // ── Scene 5: CTA 20-22s ───────────────────────────────────────────────────
+  if (t >= 20.0) {
+    const a = prog(t, 20.0, 21.0);
     const bg = ctx.createLinearGradient(0, 0, 0, V1H);
     bg.addColorStop(0, `rgba(26,71,33,${a})`); bg.addColorStop(1, `rgba(45,106,53,${a})`);
     ctx.fillStyle = bg; ctx.fillRect(0, 0, V1W, V1H);
 
-    const logoP = easeOut(prog(t, 16.1, 16.9));
-    ctx.save(); ctx.translate(V1W/2, V1H/2-180); ctx.scale(logoP, logoP);
+    // "Planters Blueprint" title at top
+    txt(ctx, "Planters Blueprint", V1W/2, 100, 54, C.white, true, "center", a * prog(t, 20.0, 20.8));
+
+    const logoP = easeOut(prog(t, 20.1, 20.9));
+    ctx.save(); ctx.translate(V1W/2, V1H/2 - 160); ctx.scale(logoP, logoP);
     em(ctx, "🌱", 0, 0, 150, a); ctx.restore();
 
-    txt(ctx, "Start your garden today", V1W/2, V1H/2-10, 60, C.white, true, "center", a * prog(t, 16.3, 17.0));
-    txt(ctx, "Free · AI-powered · Takes 2 minutes", V1W/2, V1H/2+60, 28, C.mintDark, false, "center", a * prog(t, 16.5, 17.2));
+    txt(ctx, "Start your garden today", V1W/2, V1H/2, 60, C.white, true, "center", a * prog(t, 20.3, 21.0));
+    txt(ctx, "Free · AI-powered · Takes 2 minutes", V1W/2, V1H/2 + 70, 28, C.mintDark, false, "center", a * prog(t, 20.5, 21.2));
 
     const btnW = 760, btnX = (V1W-btnW)/2;
-    ctx.save(); ctx.globalAlpha = a * prog(t, 16.6, 17.3);
+    ctx.save(); ctx.globalAlpha = a * prog(t, 20.6, 21.3);
     ctx.shadowColor = "rgba(0,0,0,0.35)"; ctx.shadowBlur = 28;
-    rr(ctx, btnX, V1H/2+120, btnW, 96, 48, C.harvest);
+    rr(ctx, btnX, V1H/2 + 130, btnW, 96, 48, C.harvest);
     ctx.restore();
-    txt(ctx, "plantersblueprint.com", V1W/2, V1H/2+168, 34, "#1a4721", true, "center", a * prog(t, 16.6, 17.3));
+    txt(ctx, "plantersblueprint.com", V1W/2, V1H/2 + 178, 34, "#1a4721", true, "center", a * prog(t, 20.6, 21.3));
   }
 }
 
@@ -792,7 +794,7 @@ function VideoCard({ title, desc, drawFn, cfg, filename }: {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 const V1_CFG: VideoConfig = { W: V1W, H: V1H, duration: 18, fps: 30 };
 const V2_CFG: VideoConfig = { W: V2W, H: V2H, duration: 18, fps: 30 };
-const V3_CFG: VideoConfig = { W: V1W, H: V1H, duration: 18, fps: 30 };
+const V3_CFG: VideoConfig = { W: V1W, H: V1H, duration: 22, fps: 30 };
 
 export default function PromoVideosPage() {
   return (
