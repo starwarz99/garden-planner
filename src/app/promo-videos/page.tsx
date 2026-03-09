@@ -594,22 +594,13 @@ function drawVideo3(ctx: CanvasRenderingContext2D, t: number) {
     bg.addColorStop(0, `rgba(26,71,33,${a})`); bg.addColorStop(1, `rgba(45,106,53,${a})`);
     ctx.fillStyle = bg; ctx.fillRect(0, 0, V1W, V1H);
 
-    // "Planters Blueprint" title at top
-    txt(ctx, "Planters Blueprint", V1W/2, 100, 54, C.white, true, "center", a * prog(t, 20.0, 20.8));
-
     const logoP = easeOut(prog(t, 20.1, 20.9));
-    ctx.save(); ctx.translate(V1W/2, V1H/2 - 160); ctx.scale(logoP, logoP);
+    ctx.save(); ctx.translate(V1W/2, V1H/2 - 200); ctx.scale(logoP, logoP);
     em(ctx, "🌱", 0, 0, 150, a); ctx.restore();
 
-    txt(ctx, "Start your garden today", V1W/2, V1H/2, 60, C.white, true, "center", a * prog(t, 20.3, 21.0));
-    txt(ctx, "Free · AI-powered · Takes 2 minutes", V1W/2, V1H/2 + 70, 28, C.mintDark, false, "center", a * prog(t, 20.5, 21.2));
-
-    const btnW = 760, btnX = (V1W-btnW)/2;
-    ctx.save(); ctx.globalAlpha = a * prog(t, 20.6, 21.3);
-    ctx.shadowColor = "rgba(0,0,0,0.35)"; ctx.shadowBlur = 28;
-    rr(ctx, btnX, V1H/2 + 130, btnW, 96, 48, C.harvest);
-    ctx.restore();
-    txt(ctx, "plantersblueprint.com", V1W/2, V1H/2 + 178, 34, "#1a4721", true, "center", a * prog(t, 20.6, 21.3));
+    txt(ctx, "Start your garden today at", V1W/2, V1H/2 - 30, 58, C.white, true, "center", a * prog(t, 20.3, 21.0));
+    txt(ctx, "PlantersBlueprint.com", V1W/2, V1H/2 + 50, 64, C.harvest, true, "center", a * prog(t, 20.4, 21.1));
+    txt(ctx, "Free · AI-powered · Takes 2 minutes", V1W/2, V1H/2 + 130, 26, C.mintDark, false, "center", a * prog(t, 20.5, 21.2));
   }
 }
 
