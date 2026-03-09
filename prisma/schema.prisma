@@ -46,6 +46,7 @@ model User {
   accounts Account[]
   sessions Session[]
   gardens  Garden[]
+  visits   SiteVisit[]
 }
 
 model Account {
@@ -136,4 +137,36 @@ model PlantIconOverride {
   emoji     String?
   bgColor   String?
   updatedAt DateTime @updatedAt
+}
+
+model SiteVisit {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+
+  // Page
+  path        String
+
+  // Attribution
+  referrer    String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmContent  String?
+  fbclid      String?   // Facebook click ID — confirms ad traffic
+  gclid       String?   // Google click ID
+
+  // Network / geo (from Vercel request headers)
+  ipAddress   String?
+  country     String?   // ISO 3166-1 alpha-2, e.g. "US"
+  city        String?
+
+  // Client
+  userAgent   String?
+
+  // Authenticated user (null for anonymous)
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([userId])
 }

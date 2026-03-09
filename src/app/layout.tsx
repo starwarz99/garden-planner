@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { SessionProvider } from "next-auth/react";
 import { getPlantIconOverrides } from "@/lib/plant-icons";
 import { IconOverridesProvider } from "@/contexts/IconOverridesContext";
+import { VisitTracker } from "@/components/VisitTracker";
 
 const lora = Lora({
   subsets: ["latin"],
@@ -34,6 +35,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="antialiased min-h-screen flex flex-col">
         <SessionProvider>
           <IconOverridesProvider overrides={overrides}>
+            <VisitTracker />
             <Navbar />
             <main className="flex-1">{children}</main>
             <Footer />
