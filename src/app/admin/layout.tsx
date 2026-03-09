@@ -29,6 +29,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           >
             Visitors
           </Link>
+          <Link
+            href="/admin/sitemap"
+            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary border-b-2 border-transparent hover:border-primary transition-colors"
+          >
+            Site Map
+          </Link>
         </nav>
       </div>
       {children}
