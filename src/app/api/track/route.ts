@@ -11,6 +11,7 @@ export async function POST(req: Request) {
       path?: string;
       search?: string;
       referrer?: string;
+      sessionId?: string;
     };
 
     const ua = req.headers.get("user-agent") ?? null;
@@ -58,6 +59,7 @@ export async function POST(req: Request) {
           utmContent:  search.get("utm_content"),
           fbclid:      search.get("fbclid"),
           gclid:       search.get("gclid"),
+          sessionId:   body.sessionId ?? null,
           userId:      session?.user?.id ?? null,
         },
       }),

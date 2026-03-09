@@ -163,10 +163,14 @@ model SiteVisit {
   // Client
   userAgent   String?
 
+  // Browser session (sessionStorage UUID — resets per tab)
+  sessionId   String?
+
   // Authenticated user (null for anonymous)
   userId      String?
   user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([createdAt])
   @@index([userId])
+  @@index([sessionId])
 }

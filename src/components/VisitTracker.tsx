@@ -3,26 +3,35 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
+function getSessionId(): string {
+  let id = sessionStorage.getItem("_vsid");
+  if (!id) {
+    id = typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2) + Date.now().toString(36);
+    sessionStorage.setItem("_vsid", id);
+  }
+  return id;
+}
+
 export function VisitTracker() {
   const pathname = usePathname();
   const lastTracked = useRef<string>("");
 
   useEffect(() => {
-    // Include search params so UTM/fbclid are captured, but use
-    // window.location to avoid needing a Suspense boundary
-    const search = window.location.search.slice(1); // strip leading "?"
+    const search = window.location.search.slice(1);
     const key = pathname + (search ? `?${search}` : "");
 
     if (lastTracked.current === key) return;
     lastTracked.current = key;
 
     const payload = JSON.stringify({
-      path:     pathname,
+      path:      pathname,
       search,
-      referrer: document.referrer,
+      referrer:  document.referrer,
+      sessionId: getSessionId(),
     });
 
-    // sendBeacon is fire-and-forget (survives page unload)
     if (typeof navigator.sendBeacon === "function") {
       navigator.sendBeacon("/api/track", new Blob([payload], { type: "application/json" }));
     } else {
