@@ -23,7 +23,7 @@ const C = {
   pink:    "#fce7f3", yellow:"#fef9c3", red:"#fee2e2",
 };
 
-function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, fill?: string, stroke?: string, sw = 2) {
+function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number | number[], fill?: string, stroke?: string, sw = 2) {
   ctx.beginPath(); ctx.roundRect(x, y, w, h, r);
   if (fill)   { ctx.fillStyle   = fill;  ctx.fill(); }
   if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = sw; ctx.stroke(); }
@@ -380,6 +380,237 @@ function drawVideo2(ctx: CanvasRenderingContext2D, t: number) {
   }
 }
 
+// ─── VIDEO 3  (1080 × 1350, 4:5 hook-style ad) ───────────────────────────────
+const PAIN_POINTS = [
+  { em:"😤", line1:"Spending hours",          line2:"planning your layout?" },
+  { em:"🐛", line1:"Plants dying from",       line2:"bad companions?" },
+  { em:"❓", line1:"Not sure what grows",      line2:"in your climate?" },
+];
+
+const V3_FEATURES = [
+  { icon:"🤖", title:"AI Designs It For You",  sub:"Answer 10 questions → done",        bg:"#dcfce7", fg:"#16a34a" },
+  { icon:"🌿", title:"Companion Planting",     sub:"Science-backed pairings built in",   bg:"#d1fae5", fg:"#059669" },
+  { icon:"🌡️", title:"Zone-Aware",            sub:"All 26 USDA zones supported",        bg:"#fef9c3", fg:"#ca8a04" },
+  { icon:"📅", title:"Care Calendar",          sub:"Month-by-month planting schedule",   bg:"#fce7f3", fg:"#db2777" },
+];
+
+const GOOD_PAIRS = [["🍅","🌿"],["🥕","🧅"],["🥦","🌸"],["🌶️","🌻"]];
+
+function drawVideo3(ctx: CanvasRenderingContext2D, t: number) {
+  ctx.clearRect(0, 0, V1W, V1H);
+
+  // ── Scene 1: Hook 0-2.8s ──────────────────────────────────────────────────
+  if (t < 3.0) {
+    const bg = ctx.createLinearGradient(0, 0, 0, V1H);
+    bg.addColorStop(0, "#1a4721"); bg.addColorStop(1, C.green);
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, V1W, V1H);
+
+    // Subtle grid pattern
+    ctx.save(); ctx.globalAlpha = 0.05; ctx.strokeStyle = C.white; ctx.lineWidth = 1;
+    for (let x = 0; x < V1W; x += 80) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,V1H); ctx.stroke(); }
+    for (let y = 0; y < V1H; y += 80) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(V1W,y); ctx.stroke(); }
+    ctx.restore();
+
+    const fadeOut = 1 - prog(t, 2.5, 3.0);
+
+    // "Are you a" — slides down from above
+    const line1A = progOut(t, 0.1, 0.7) * fadeOut;
+    const line1Y = lerp(V1H/2 - 200, V1H/2 - 180, easeOut(prog(t, 0.1, 0.7)));
+    txt(ctx, "Are you a", V1W/2, line1Y, 62, "rgba(255,255,255,0.85)", false, "center", line1A);
+
+    // "gardener?" — scales in with impact
+    const line2P = prog(t, 0.5, 1.1);
+    const line2Scl = lerp(1.6, 1, easeOut(line2P));
+    const line2A = line2P * fadeOut;
+    ctx.save();
+    ctx.translate(V1W/2, V1H/2 - 40);
+    ctx.scale(line2Scl, line2Scl);
+    ctx.globalAlpha = line2A;
+    ctx.fillStyle = C.white;
+    ctx.font = `bold 148px "Georgia",serif`;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("gardener?", 0, 0);
+    ctx.restore();
+
+    // Underline
+    const ulW = lerp(0, 700, easeOut(prog(t, 1.0, 1.6)));
+    ctx.save(); ctx.globalAlpha = fadeOut * prog(t, 1.0, 1.6);
+    ctx.fillStyle = C.harvest; ctx.fillRect((V1W-ulW)/2, V1H/2 + 62, ulW, 7);
+    ctx.restore();
+
+    // "You need this." — slides up from below
+    const line3P = prog(t, 1.2, 1.9);
+    const line3Y = lerp(V1H/2 + 160, V1H/2 + 140, easeOut(line3P));
+    txt(ctx, "You need this.", V1W/2, line3Y, 70, C.harvest, true, "center", line3P * fadeOut);
+
+    // Floating plant emojis
+    ["🌱","🍅","🌿","🥕","🌻","🌶️"].forEach((p, i) => {
+      const angle = (t * 0.4 + i * Math.PI * 2 / 6);
+      const ex = V1W/2 + Math.cos(angle) * (350 + i*12);
+      const ey = V1H/2 - 20 + Math.sin(angle) * 220;
+      em(ctx, p, ex, ey, 34, 0.18 * fadeOut);
+    });
+  }
+
+  // ── Scene 2: Pain points 2.8-8s ──────────────────────────────────────────
+  if (t >= 2.6 && t < 8.5) {
+    const bgA = prog(t, 2.6, 3.4);
+    ctx.fillStyle = lerpHex(C.green, "#fffbeb", bgA);
+    ctx.fillRect(0, 0, V1W, V1H);
+
+    const titleA = prog(t, 3.2, 4.0) * (1 - prog(t, 7.8, 8.4));
+    txt(ctx, "Sound familiar?", V1W/2, 110, 52, C.green, true, "center", titleA);
+
+    const cW = 920, cH = 164, cX = (V1W - cW) / 2;
+
+    PAIN_POINTS.forEach((pt, i) => {
+      const appear = 3.6 + i * 0.85;
+      const slideP = progOut(t, appear, appear + 0.5);
+      const cA = slideP * (1 - prog(t, 7.6, 8.3));
+      if (cA <= 0) return;
+
+      const cy = 210 + i * (cH + 18);
+      const cx = lerp(-cW - 40, cX, easeOut(slideP));
+
+      ctx.save(); ctx.globalAlpha = cA;
+      ctx.shadowColor = "rgba(0,0,0,0.1)"; ctx.shadowBlur = 20;
+      rr(ctx, cx, cy, cW, cH, 20, "#fff1f2");
+      // Left accent bar
+      rr(ctx, cx, cy, 10, cH, [20,0,0,20], "#fca5a5");
+      ctx.restore();
+
+      ctx.save(); ctx.globalAlpha = cA;
+      em(ctx, pt.em, cx + 82, cy + cH/2, 62);
+      ctx.fillStyle = "#1f2937"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+      ctx.font = `bold 30px "Georgia",serif`;
+      ctx.fillText(pt.line1, cx + 148, cy + cH/2 - 22);
+      ctx.font = `28px "Arial",sans-serif`; ctx.fillStyle = C.gray;
+      ctx.fillText(pt.line2, cx + 148, cy + cH/2 + 22);
+      ctx.restore();
+    });
+  }
+
+  // ── Scene 3: Solution reveal 8-10s ────────────────────────────────────────
+  if (t >= 7.8 && t < 10.5) {
+    const inA  = prog(t, 7.8, 8.8);
+    const outA = 1 - prog(t, 10.0, 10.5);
+    const a = Math.min(inA, outA);
+
+    ctx.fillStyle = `rgba(26,71,33,${a * 0.97})`;
+    ctx.fillRect(0, 0, V1W, V1H);
+
+    // Burst ring
+    const burstR = lerp(0, 500, easeOut(prog(t, 7.8, 9.0)));
+    ctx.save(); ctx.globalAlpha = a * lerp(0.4, 0, prog(t, 8.2, 9.5));
+    ctx.strokeStyle = C.harvest; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(V1W/2, V1H/2, burstR, 0, Math.PI*2); ctx.stroke();
+    ctx.restore();
+
+    const logoScl = lerp(0.3, 1, easeOut(prog(t, 7.9, 8.7)));
+    ctx.save(); ctx.translate(V1W/2, V1H/2 - 130); ctx.scale(logoScl, logoScl);
+    em(ctx, "🌱", 0, 0, 140, a); ctx.restore();
+
+    txt(ctx, "Meet Planters Blueprint", V1W/2, V1H/2 + 30, 58, C.white, true, "center", a * prog(t, 8.2, 9.0));
+    txt(ctx, "The AI-powered garden designer", V1W/2, V1H/2 + 104, 30, C.mintDark, false, "center", a * prog(t, 8.5, 9.3));
+
+    // Check list
+    ["Designed for your exact zone & soil","Companion planting built in","Free to start — no credit card"].forEach((line, i) => {
+      const lA = a * prog(t, 8.8 + i*0.25, 9.6 + i*0.25);
+      txt(ctx, `✅  ${line}`, V1W/2, V1H/2 + 190 + i*52, 24, C.mintDark, false, "center", lA);
+    });
+  }
+
+  // ── Scene 4: Feature grid 10-16s ─────────────────────────────────────────
+  if (t >= 10.0) {
+    const bgA = prog(t, 10.0, 10.8);
+    ctx.fillStyle = lerpHex(C.green, C.mint, bgA);
+    ctx.fillRect(0, 0, V1W, V1H);
+
+    const titleA = prog(t, 10.2, 11.0) * (1 - prog(t, 16.2, 16.8));
+    txt(ctx, "Here's what you get", V1W/2, 96, 50, C.green, true, "center", titleA);
+
+    // 2×2 feature cards
+    const cW = 470, cH = 290, gap = 24;
+    const gridW = cW*2+gap, gridH = cH*2+gap;
+    const gx = (V1W-gridW)/2, gy = 155;
+
+    V3_FEATURES.forEach((f, i) => {
+      const col = i%2, row = Math.floor(i/2);
+      const cx = gx + col*(cW+gap), cy = gy + row*(cH+gap);
+      const fA = prog(t, 10.6 + i*0.4, 11.4 + i*0.4) * (1-prog(t, 16.0, 16.7));
+      const scl = lerp(0.85, 1, easeOut(prog(t, 10.6+i*0.4, 11.2+i*0.4)));
+      if (fA <= 0) return;
+
+      ctx.save(); ctx.globalAlpha = fA;
+      ctx.shadowColor = "rgba(0,0,0,0.1)"; ctx.shadowBlur = 18;
+      ctx.translate(cx+cW/2, cy+cH/2); ctx.scale(scl, scl); ctx.translate(-(cx+cW/2), -(cy+cH/2));
+      rr(ctx, cx, cy, cW, cH, 20, C.white);
+      rr(ctx, cx, cy, cW, 8, [20,20,0,0], f.fg + "80");
+      ctx.restore();
+
+      ctx.save(); ctx.globalAlpha = fA;
+      // Icon circle
+      rr(ctx, cx+20, cy+24, 80, 80, 18, f.bg);
+      em(ctx, f.icon, cx+60, cy+64, 44);
+
+      ctx.fillStyle = "#1f2937"; ctx.font = `bold 26px "Georgia",serif`;
+      ctx.textAlign = "left"; ctx.textBaseline = "middle";
+      ctx.fillText(f.title, cx+20, cy+140);
+      ctx.fillStyle = C.gray; ctx.font = `19px "Arial",sans-serif`;
+      // Word-wrap the sub text
+      ctx.fillText(f.sub, cx+20, cy+180);
+
+      // Mini visual for companion pairing card
+      if (i === 1) {
+        GOOD_PAIRS.slice(0,3).forEach(([a,b], pi) => {
+          const px = cx+20+pi*130, py = cy+228;
+          rr(ctx, px, py, 116, 44, 10, f.bg);
+          em(ctx, a, px+26, py+22, 22); em(ctx, b, px+54, py+22, 22);
+          ctx.fillStyle = "#16a34a"; ctx.font = `bold 16px "Arial",sans-serif`;
+          ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          ctx.fillText("✓", px+94, py+22);
+        });
+      }
+      // Mini zone badge
+      if (i === 2) {
+        rr(ctx, cx+20, cy+218, 180, 54, 12, f.bg);
+        ctx.fillStyle = f.fg; ctx.font = `bold 26px "Georgia",serif`;
+        ctx.textAlign = "center"; ctx.fillText("Zone 7b", cx+110, cy+245);
+      }
+      ctx.restore();
+    });
+
+    // Companion notes bottom strip
+    const stripA = prog(t, 13.5, 14.5) * (1-prog(t, 16.0, 16.7));
+    if (stripA > 0) {
+      rr(ctx, 40, gy+gridH+28, V1W-80, 56, 14, C.green+"22");
+      txt(ctx, "🌱  Free to start  ·  No credit card required  ·  Takes 2 minutes", V1W/2, gy+gridH+56, 22, C.green, false, "center", stripA);
+    }
+  }
+
+  // ── Scene 5: CTA 16.2-18s ────────────────────────────────────────────────
+  if (t >= 16.0) {
+    const a = prog(t, 16.0, 17.0);
+    const bg = ctx.createLinearGradient(0, 0, 0, V1H);
+    bg.addColorStop(0, `rgba(26,71,33,${a})`); bg.addColorStop(1, `rgba(45,106,53,${a})`);
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, V1W, V1H);
+
+    const logoP = easeOut(prog(t, 16.1, 16.9));
+    ctx.save(); ctx.translate(V1W/2, V1H/2-180); ctx.scale(logoP, logoP);
+    em(ctx, "🌱", 0, 0, 150, a); ctx.restore();
+
+    txt(ctx, "Start your garden today", V1W/2, V1H/2-10, 60, C.white, true, "center", a * prog(t, 16.3, 17.0));
+    txt(ctx, "Free · AI-powered · Takes 2 minutes", V1W/2, V1H/2+60, 28, C.mintDark, false, "center", a * prog(t, 16.5, 17.2));
+
+    const btnW = 760, btnX = (V1W-btnW)/2;
+    ctx.save(); ctx.globalAlpha = a * prog(t, 16.6, 17.3);
+    ctx.shadowColor = "rgba(0,0,0,0.35)"; ctx.shadowBlur = 28;
+    rr(ctx, btnX, V1H/2+120, btnW, 96, 48, C.harvest);
+    ctx.restore();
+    txt(ctx, "plantersblueprint.com", V1W/2, V1H/2+168, 34, "#1a4721", true, "center", a * prog(t, 16.6, 17.3));
+  }
+}
+
 // ─── MP4 recorder hook ────────────────────────────────────────────────────────
 type Status = "idle"|"recording"|"done"|"error";
 
@@ -561,6 +792,7 @@ function VideoCard({ title, desc, drawFn, cfg, filename }: {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 const V1_CFG: VideoConfig = { W: V1W, H: V1H, duration: 18, fps: 30 };
 const V2_CFG: VideoConfig = { W: V2W, H: V2H, duration: 18, fps: 30 };
+const V3_CFG: VideoConfig = { W: V1W, H: V1H, duration: 18, fps: 30 };
 
 export default function PromoVideosPage() {
   return (
@@ -585,6 +817,13 @@ export default function PromoVideosPage() {
             drawFn={drawVideo2}
             cfg={V2_CFG}
             filename="planters-blueprint-features.mp4"
+          />
+          <VideoCard
+            title="Video 3 — Are You a Gardener? (Instagram 4:5)"
+            desc="Hook-style ad for Instagram and Facebook. Opens with 'Are you a gardener? You need this tool', addresses pain points, then reveals the solution."
+            drawFn={drawVideo3}
+            cfg={V3_CFG}
+            filename="planters-blueprint-gardener-hook.mp4"
           />
         </div>
       </div>
