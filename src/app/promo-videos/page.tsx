@@ -2,647 +2,591 @@
 
 import { useRef, useState, useCallback } from "react";
 
-// ─── Canvas dimensions ────────────────────────────────────────────────────────
-const W = 1280, H = 720;
-const DURATION = 18; // seconds per video
+// ─── Animation helpers ────────────────────────────────────────────────────────
+const easeOut   = (t: number) => 1 - Math.pow(1 - t, 3);
+const easeInOut = (t: number) => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+const clamp     = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+const prog      = (t: number, s: number, e: number) => easeInOut(clamp((t-s)/(e-s), 0, 1));
+const progOut   = (t: number, s: number, e: number) => easeOut(clamp((t-s)/(e-s), 0, 1));
+const lerp      = (a: number, b: number, p: number) => a + (b - a) * p;
+const lerpHex   = (h1: string, h2: string, p: number) => {
+  const parse = (h: string) => [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+  const [r1,g1,b1] = parse(h1), [r2,g2,b2] = parse(h2);
+  return `rgb(${Math.round(lerp(r1,r2,p))},${Math.round(lerp(g1,g2,p))},${Math.round(lerp(b1,b2,p))})`;
+};
 
-// ─── Brand palette ───────────────────────────────────────────────────────────
 const C = {
-  green:    "#2d6a35",
-  greenMid: "#3d8b45",
-  greenLt:  "#6db87a",
-  mint:     "#f0fdf4",
-  mintDark: "#dcfce7",
-  harvest:  "#d4a820",
-  harvestLt:"#fef3c7",
-  white:    "#ffffff",
-  gray:     "#6b7280",
-  grayLt:   "#f9fafb",
-  pink:     "#fce7f3",
-  pinkDark: "#f9a8d4",
-  yellow:   "#fef9c3",
-  red:      "#fee2e2",
-  redDark:  "#fca5a5",
+  green:   "#2d6a35", greenMid:"#3d8b45", greenLt:"#6db87a",
+  mint:    "#f0fdf4", mintDark:"#dcfce7",
+  harvest: "#d4a820", harvestLt:"#fef3c7",
+  white:   "#ffffff", gray:"#6b7280", grayLt:"#f9fafb",
+  pink:    "#fce7f3", yellow:"#fef9c3", red:"#fee2e2",
 };
 
-// ─── Animation math ───────────────────────────────────────────────────────────
-const easeOut  = (t: number) => 1 - Math.pow(1 - t, 3);
-const easeInOut= (t: number) => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
-const clamp    = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
-const prog     = (t: number, s: number, e: number) => easeInOut(clamp((t-s)/(e-s), 0, 1));
-const progOut  = (t: number, s: number, e: number) => easeOut(clamp((t-s)/(e-s), 0, 1));
-const lerp     = (a: number, b: number, p: number) => a + (b - a) * p;
-const lerpColor= (hex1: string, hex2: string, p: number) => {
-  const parse = (h: string) => [
-    parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)
-  ];
-  const [r1,g1,b1] = parse(hex1), [r2,g2,b2] = parse(hex2);
-  const r = Math.round(lerp(r1,r2,p)), g = Math.round(lerp(g1,g2,p)), b = Math.round(lerp(b1,b2,p));
-  return `rgb(${r},${g},${b})`;
-};
-
-// ─── Drawing helpers ──────────────────────────────────────────────────────────
 function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, fill?: string, stroke?: string, sw = 2) {
-  ctx.beginPath();
-  ctx.roundRect(x, y, w, h, r);
-  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  ctx.beginPath(); ctx.roundRect(x, y, w, h, r);
+  if (fill)   { ctx.fillStyle   = fill;  ctx.fill(); }
   if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = sw; ctx.stroke(); }
 }
-
-function text(ctx: CanvasRenderingContext2D, str: string, x: number, y: number, size: number, color: string, font = "serif", align: CanvasTextAlign = "center", alpha = 1) {
-  ctx.save();
-  ctx.globalAlpha = alpha;
-  ctx.fillStyle = color;
-  ctx.font = `${size}px ${font === "serif" ? '"Georgia", serif' : '"Arial", sans-serif'}`;
-  ctx.textAlign = align;
-  ctx.textBaseline = "middle";
-  ctx.fillText(str, x, y);
-  ctx.restore();
+function txt(ctx: CanvasRenderingContext2D, s: string, x: number, y: number, size: number, color: string, serif = false, align: CanvasTextAlign = "center", alpha = 1) {
+  ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = color;
+  ctx.font = `${size}px ${serif ? '"Georgia",serif' : '"Arial",sans-serif'}`;
+  ctx.textAlign = align; ctx.textBaseline = "middle"; ctx.fillText(s, x, y); ctx.restore();
+}
+function em(ctx: CanvasRenderingContext2D, e: string, x: number, y: number, size: number, alpha = 1, scl = 1) {
+  ctx.save(); ctx.globalAlpha = alpha; ctx.font = `${size*scl}px serif`;
+  ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(e, x, y); ctx.restore();
 }
 
-function emoji(ctx: CanvasRenderingContext2D, em: string, x: number, y: number, size: number, alpha = 1, scale = 1) {
-  ctx.save();
-  ctx.globalAlpha = alpha;
-  ctx.font = `${size * scale}px serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(em, x, y);
-  ctx.restore();
-}
+// ─── VIDEO 1  (1080 × 1350, 4:5 portrait) ────────────────────────────────────
+const V1W = 1080, V1H = 1350;
 
-// ─── VIDEO 1: Garden Designer ─────────────────────────────────────────────────
-const GRID_COLS = 6, GRID_ROWS = 5;
-const GRID: { em: string; bg: string; zone: string }[][] = [
-  [
-    { em:"🍅", bg:"#bbf7d0", zone:"Tomato Zone" },
-    { em:"🍅", bg:"#bbf7d0", zone:"Tomato Zone" },
-    { em:"🌿", bg:"#d1fae5", zone:"Herb Border" },
-    { em:"🌿", bg:"#d1fae5", zone:"Herb Border" },
-    { em:"🌿", bg:"#d1fae5", zone:"Herb Border" },
-    { em:"🌿", bg:"#d1fae5", zone:"Herb Border" },
-  ],[
-    { em:"🍅", bg:"#bbf7d0", zone:"Tomato Zone" },
-    { em:"🍅", bg:"#bbf7d0", zone:"Tomato Zone" },
-    { em:"🌱", bg:"#d1fae5", zone:"Herb Border" },
-    { em:"🌱", bg:"#d1fae5", zone:"Herb Border" },
-    { em:"🌿", bg:"#d1fae5", zone:"Herb Border" },
-    { em:"🌿", bg:"#d1fae5", zone:"Herb Border" },
-  ],[
-    { em:"🥕", bg:"#fef9c3", zone:"Root Veg" },
-    { em:"🥕", bg:"#fef9c3", zone:"Root Veg" },
-    { em:"🥕", bg:"#fef9c3", zone:"Root Veg" },
-    { em:"🥦", bg:"#fef9c3", zone:"Root Veg" },
-    { em:"🥦", bg:"#fef9c3", zone:"Root Veg" },
-    { em:"🌻", bg:"#fce7f3", zone:"Pollinator" },
-  ],[
-    { em:"🧅", bg:"#fef9c3", zone:"Root Veg" },
-    { em:"🧅", bg:"#fef9c3", zone:"Root Veg" },
-    { em:"🌶️", bg:"#fee2e2", zone:"Pepper Row" },
-    { em:"🌶️", bg:"#fee2e2", zone:"Pepper Row" },
-    { em:"🌸", bg:"#fce7f3", zone:"Pollinator" },
-    { em:"🌸", bg:"#fce7f3", zone:"Pollinator" },
-  ],[
-    { em:"",   bg:"#f3f4f6", zone:"" },
-    { em:"",   bg:"#f3f4f6", zone:"" },
-    { em:"🌶️", bg:"#fee2e2", zone:"Pepper Row" },
-    { em:"🌶️", bg:"#fee2e2", zone:"Pepper Row" },
-    { em:"🌸", bg:"#fce7f3", zone:"Pollinator" },
-    { em:"🌸", bg:"#fce7f3", zone:"Pollinator" },
-  ],
+const WIZARD_CARDS = [
+  { icon:"📍", label:"USDA Zone",       val:"Zone 7b · Maryland"        },
+  { icon:"📐", label:"Garden Size",     val:"10 × 12 ft"                },
+  { icon:"☀️", label:"Sun Exposure",   val:"Full sun · 6+ hours"       },
+  { icon:"🌱", label:"Plants Wanted",   val:"Tomatoes, herbs, peppers…" },
+  { icon:"🎯", label:"Growing Goals",   val:"High yield + pollinators"  },
 ];
 
-const PLANTS_ORDER: [number,number][] = GRID.flatMap((row, r) =>
-  row.map((_, c) => [r, c] as [number,number])
-).filter(([r,c]) => GRID[r][c].em !== "");
-
-const ZONES = [
-  { name:"🍅 Tomato Zone",  color:"#bbf7d0", accent:"#16a34a" },
-  { name:"🌿 Herb Border",  color:"#d1fae5", accent:"#059669" },
-  { name:"🥕 Root Veg",     color:"#fef9c3", accent:"#ca8a04" },
-  { name:"🌶️ Pepper Row",   color:"#fee2e2", accent:"#dc2626" },
-  { name:"🌸 Pollinator",   color:"#fce7f3", accent:"#db2777" },
+const V1_GRID: { em: string; bg: string }[][] = [
+  [{ em:"🍅",bg:"#bbf7d0"},{em:"🍅",bg:"#bbf7d0"},{em:"🌿",bg:"#d1fae5"},{em:"🌿",bg:"#d1fae5"},{em:"🌿",bg:"#d1fae5"}],
+  [{ em:"🍅",bg:"#bbf7d0"},{em:"🍅",bg:"#bbf7d0"},{em:"🌱",bg:"#d1fae5"},{em:"🌱",bg:"#d1fae5"},{em:"🌿",bg:"#d1fae5"}],
+  [{ em:"🥕",bg:"#fef9c3"},{em:"🥕",bg:"#fef9c3"},{em:"🥕",bg:"#fef9c3"},{em:"🌻",bg:"#fce7f3"},{em:"🌻",bg:"#fce7f3"}],
+  [{ em:"🧅",bg:"#fef9c3"},{em:"🧅",bg:"#fef9c3"},{em:"🌶️",bg:"#fee2e2"},{em:"🌶️",bg:"#fee2e2"},{em:"🌸",bg:"#fce7f3"}],
+  [{ em:"🥦",bg:"#bbf7d0"},{em:"🥦",bg:"#bbf7d0"},{em:"🌶️",bg:"#fee2e2"},{em:"🌶️",bg:"#fee2e2"},{em:"🌸",bg:"#fce7f3"}],
 ];
 
-const COMPANION_NOTES = [
-  "Basil next to tomatoes repels aphids",
-  "Marigolds deter nematodes near peppers",
-  "Carrots loosen soil for brassicas",
-  "Onions keep away carrot fly",
-];
+const V1_ORDER = V1_GRID.flatMap((row,r)=>row.map((_,c)=>[r,c] as [number,number]));
 
 function drawVideo1(ctx: CanvasRenderingContext2D, t: number) {
-  ctx.clearRect(0, 0, W, H);
+  ctx.clearRect(0, 0, V1W, V1H);
 
-  // ── Scene 1: Brand intro (0-3s) ──────────────────────────────────────────
-  const introProg = prog(t, 0, 2.8);
-  const introOut  = 1 - prog(t, 2.5, 3.2);
-  const introAlpha = Math.min(introProg, introOut);
-
+  // ── Scene 1: Intro 0-3s ────────────────────────────────────────────────────
   if (t < 3.2) {
-    // Background gradient
-    const bg = ctx.createLinearGradient(0, 0, W, H);
-    bg.addColorStop(0, C.green);
-    bg.addColorStop(1, C.greenMid);
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
+    const bg = ctx.createLinearGradient(0, 0, 0, V1H);
+    bg.addColorStop(0, "#1e5128"); bg.addColorStop(1, C.greenMid);
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, V1W, V1H);
 
-    // Decorative circles
-    ctx.save();
-    ctx.globalAlpha = 0.08;
-    ctx.fillStyle = C.white;
-    ctx.beginPath(); ctx.arc(200, 150, 180, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(1100, 580, 220, 0, Math.PI*2); ctx.fill();
+    // Decorative blobs
+    ctx.save(); ctx.globalAlpha = 0.07; ctx.fillStyle = C.white;
+    ctx.beginPath(); ctx.arc(150, 200, 250, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(950, 1150, 300, 0, Math.PI*2); ctx.fill();
     ctx.restore();
 
-    const scale = lerp(0.3, 1, easeOut(prog(t, 0, 1.2)));
-    ctx.save();
-    ctx.translate(W/2, H/2 - 60);
-    ctx.scale(scale, scale);
-    emoji(ctx, "🌱", 0, 0, 130, introAlpha);
+    const fadeOut = 1 - prog(t, 2.6, 3.2);
+    const logoP   = easeOut(prog(t, 0, 1));
+    ctx.save(); ctx.translate(V1W/2, V1H/2 - 110);
+    ctx.scale(lerp(0.2, 1, logoP), lerp(0.2, 1, logoP));
+    em(ctx, "🌱", 0, 0, 160, fadeOut);
     ctx.restore();
 
-    text(ctx, "Planters Blueprint", W/2, H/2 + 55, 72, C.white, "serif", "center", introAlpha * prog(t, 0.4, 1.5));
-    text(ctx, "AI-Powered Garden Designer", W/2, H/2 + 120, 32, C.mintDark, "sans", "center", introAlpha * prog(t, 0.8, 1.8));
+    txt(ctx, "Planters Blueprint", V1W/2, V1H/2 + 60, 76, C.white, true, "center", fadeOut * prog(t, 0.3, 1.2));
+    txt(ctx, "AI-Powered Garden Design", V1W/2, V1H/2 + 135, 34, C.mintDark, false, "center", fadeOut * prog(t, 0.7, 1.7));
   }
 
-  // ── Scene 2 & 3: Garden grid (3-15s) ─────────────────────────────────────
-  if (t >= 2.8 && t < 18) {
-    const sceneP = prog(t, 2.8, 3.6);
+  // ── Scene 2: Wizard cards 3-9s ────────────────────────────────────────────
+  if (t >= 2.8 && t < 10.5) {
+    const bgP = prog(t, 2.8, 3.8);
+    ctx.fillStyle = lerpHex(C.green, C.mint, bgP);
+    ctx.fillRect(0, 0, V1W, V1H);
 
-    // Background
-    ctx.fillStyle = lerpColor(C.green, C.mint, sceneP);
-    ctx.fillRect(0, 0, W, H);
+    // Background decoration
+    if (bgP > 0.5) {
+      ctx.save(); ctx.globalAlpha = 0.06; ctx.fillStyle = C.green;
+      ctx.beginPath(); ctx.arc(V1W+100, -100, 400, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
 
-    // Title
-    const titleA = prog(t, 3.2, 4.2);
-    text(ctx, "Your AI-designed garden layout", W/2, 54, 30, C.green, "serif", "center", titleA);
+    const titleA = prog(t, 3.2, 4.2) * (1 - prog(t, 9.5, 10.2));
+    rr(ctx, (V1W-420)/2, 90, 420, 56, 28, C.harvest + "30");
+    txt(ctx, "✨  Just answer 10 questions", V1W/2, 118, 26, C.green, false, "center", titleA);
+    txt(ctx, "We tailor every detail to your exact garden", V1W/2, 180, 22, C.gray, false, "center", titleA * prog(t, 3.5, 4.5));
 
-    // Grid setup
-    const cellSize = 96;
-    const gridW = GRID_COLS * cellSize;
-    const gridH = GRID_ROWS * cellSize;
-    const gx = 80;
-    const gy = (H - gridH) / 2 + 10;
+    const cardW = 940, cardH = 96, cardX = (V1W - cardW) / 2;
+    const cardBaseY = 230;
 
-    // Grid shadow
-    ctx.save();
-    ctx.shadowColor = "rgba(0,0,0,0.12)";
-    ctx.shadowBlur = 30;
-    rr(ctx, gx - 4, gy - 4, gridW + 8, gridH + 8, 16, C.white);
+    WIZARD_CARDS.forEach((card, i) => {
+      const appear = 3.8 + i * 0.5;
+      const slideP = progOut(t, appear, appear + 0.55);
+      const cardA  = slideP * (1 - prog(t, 9.2, 10));
+      if (cardA <= 0) return;
+
+      const cx = lerp(V1W + 80, cardX, slideP);
+      const cy = cardBaseY + i * (cardH + 14);
+
+      ctx.save(); ctx.globalAlpha = cardA;
+      ctx.shadowColor = "rgba(0,0,0,0.09)"; ctx.shadowBlur = 18;
+      rr(ctx, cx, cy, cardW, cardH, 16, C.white);
+      ctx.restore();
+
+      ctx.save(); ctx.globalAlpha = cardA;
+      rr(ctx, cx+14, cy+14, 68, 68, 12, C.mintDark);
+      em(ctx, card.icon, cx+48, cy+48, 36);
+
+      ctx.fillStyle = C.green; ctx.font = 'bold 22px "Arial",sans-serif';
+      ctx.textAlign = "left"; ctx.textBaseline = "middle";
+      ctx.fillText(card.label, cx+96, cy+34);
+      ctx.fillStyle = C.gray; ctx.font = '19px "Arial",sans-serif';
+      ctx.fillText(`→ ${card.val}`, cx+96, cy+64);
+      ctx.restore();
+    });
+  }
+
+  // ── Scene 3: AI processing 9.8-12s ────────────────────────────────────────
+  if (t >= 9.6 && t < 12.5) {
+    const fadeIn  = prog(t, 9.6, 10.4);
+    const fadeOut = 1 - prog(t, 11.8, 12.4);
+    const a = Math.min(fadeIn, fadeOut);
+
+    ctx.fillStyle = `rgba(30,81,40,${a * 0.96})`;
+    ctx.fillRect(0, 0, V1W, V1H);
+
+    em(ctx, "🤖", V1W/2, V1H/2 - 90, 110, a);
+    txt(ctx, "AI is designing your garden…", V1W/2, V1H/2 + 20, 38, C.white, false, "center", a);
+
+    // Animated progress bar
+    const barW = 600, barH = 12, barX = (V1W-barW)/2, barY = V1H/2 + 80;
+    rr(ctx, barX, barY, barW, barH, 6, "rgba(255,255,255,0.15)");
+    const fillP = prog(t, 9.8, 11.8);
+    rr(ctx, barX, barY, barW*fillP, barH, 6, C.harvest);
+
+    // Floating plant emojis
+    const plants = ["🍅","🌿","🥕","🌻","🌶️","🌸"];
+    plants.forEach((p, i) => {
+      const angle = (t * 0.8 + i * (Math.PI * 2 / plants.length));
+      const ex = V1W/2 + Math.cos(angle) * 280;
+      const ey = V1H/2 - 30 + Math.sin(angle) * 120;
+      em(ctx, p, ex, ey, 36, a * 0.5);
+    });
+  }
+
+  // ── Scene 4: Garden grid reveal 12-17s ────────────────────────────────────
+  if (t >= 11.8) {
+    const sceneA = prog(t, 11.8, 12.6);
+    ctx.fillStyle = lerpHex(C.green, C.mint, prog(t, 11.8, 13));
+    ctx.fillRect(0, 0, V1W, V1H);
+
+    const titleA = sceneA * (1 - prog(t, 16.5, 17.2));
+    txt(ctx, "Your AI-designed garden", V1W/2, 88, 44, C.green, true, "center", titleA);
+    txt(ctx, "Companion-planted · Zone 7b · 10×12 ft", V1W/2, 148, 24, C.gray, false, "center", titleA * prog(t, 12.4, 13.2));
+
+    const COLS = 5, ROWS = 5, CELL = 140;
+    const gridW = COLS * CELL, gridH = ROWS * CELL;
+    const gx = (V1W - gridW) / 2;
+    const gy = 200;
+
+    // Shadow card
+    ctx.save(); ctx.shadowColor = "rgba(0,0,0,0.12)"; ctx.shadowBlur = 30;
+    rr(ctx, gx-6, gy-6, gridW+12, gridH+12, 18, C.white);
     ctx.restore();
 
-    // Draw cells
-    const plantRevealStart = 4.2;
-    const plantRevealEnd   = 13.5;
-    const plantsPerSecond  = PLANTS_ORDER.length / (plantRevealEnd - plantRevealStart);
+    const plantRevStart = 12.8;
+    const plantRevEnd   = 16.2;
+    const perPlant = (plantRevEnd - plantRevStart) / V1_ORDER.length;
+    const zoneA = prog(t, 16, 17);
 
-    GRID.forEach((row, r) => {
+    V1_GRID.forEach((row, r) => {
       row.forEach((cell, c) => {
-        const cx = gx + c * cellSize, cy = gy + r * cellSize;
+        const cx = gx + c*CELL, cy = gy + r*CELL;
+        const cellBg = lerpHex("#ffffff", cell.bg, zoneA);
+        rr(ctx, cx, cy, CELL, CELL, 0, cellBg);
+        ctx.strokeStyle = "rgba(0,0,0,0.06)"; ctx.lineWidth = 1; ctx.strokeRect(cx, cy, CELL, CELL);
 
-        // Zone color bg (fades in after plants appear)
-        const zoneA = prog(t, 13.2, 14.5);
-        rr(ctx, cx, cy, cellSize, cellSize, 0, cell.bg.length ? lerpColor("#ffffff", cell.bg, zoneA) : "#f3f4f6");
-
-        // Grid lines
-        ctx.strokeStyle = "rgba(0,0,0,0.06)";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(cx, cy, cellSize, cellSize);
-
-        if (!cell.em) return;
-
-        // Plant appearance
-        const idx = PLANTS_ORDER.findIndex(([pr,pc]) => pr===r && pc===c);
-        const plantT = plantRevealStart + idx / plantsPerSecond;
-        const plantA = progOut(t, plantT, plantT + 0.5);
-        const plantScale = lerp(0.2, 1, easeOut(plantA));
+        const idx = V1_ORDER.findIndex(([pr,pc])=>pr===r&&pc===c);
+        const plantT = plantRevStart + idx*perPlant;
+        const plantA = progOut(t, plantT, plantT+0.45);
+        const scl = lerp(0.1, 1, easeOut(clamp((t-plantT)/0.45, 0, 1)));
 
         if (plantA > 0) {
-          ctx.save();
-          ctx.translate(cx + cellSize/2, cy + cellSize/2);
-          ctx.scale(plantScale, plantScale);
-          emoji(ctx, cell.em, 0, 0, 48, plantA);
+          ctx.save(); ctx.translate(cx+CELL/2, cy+CELL/2); ctx.scale(scl,scl);
+          em(ctx, cell.em, 0, 0, 64, plantA);
           ctx.restore();
         }
       });
     });
 
-    // Grid outer border
-    rr(ctx, gx, gy, gridW, gridH, 12, undefined, C.greenLt, 2);
+    // Grid border
+    rr(ctx, gx, gy, gridW, gridH, 14, undefined, C.greenLt, 2);
 
-    // Dimension label
-    const dimA = prog(t, 5, 6);
-    text(ctx, "12 × 10 ft garden", gx + gridW/2, gy + gridH + 30, 18, C.gray, "sans", "center", dimA);
-
-    // ── Right panel: zones + companion notes ─────────────────────────────
-    const panelX = gx + gridW + 40;
-    const panelW = W - panelX - 40;
-    const panelA = prog(t, 13.5, 14.8);
-
-    if (panelA > 0) {
-      rr(ctx, panelX, gy, panelW, gridH, 16, C.white, C.mintDark, 1.5);
-
-      text(ctx, "Garden Zones", panelX + panelW/2, gy + 32, 20, C.green, "serif", "center", panelA);
-
-      ZONES.forEach(({ name, color, accent }, i) => {
-        const zA = prog(t, 13.5 + i*0.18, 14.5 + i*0.18);
-        const rowY = gy + 72 + i * 52;
-        rr(ctx, panelX+16, rowY, panelW-32, 40, 8, color, undefined, 0);
-        ctx.save();
-        ctx.globalAlpha = zA;
-        ctx.fillStyle = accent;
-        ctx.font = "15px Arial, sans-serif";
-        ctx.textAlign = "left";
-        ctx.textBaseline = "middle";
-        ctx.fillText(name, panelX + 32, rowY + 20);
-        ctx.restore();
-      });
-
-      text(ctx, "Companion Planting Notes", panelX + panelW/2, gy + 360, 17, C.green, "serif", "center", panelA * prog(t, 14.2, 15));
-
-      COMPANION_NOTES.forEach((note, i) => {
-        const nA = prog(t, 14.5 + i*0.25, 15.5 + i*0.25);
-        const ny = gy + 390 + i * 38;
-        rr(ctx, panelX+16, ny, panelW-32, 30, 6, C.mintDark, undefined, 0);
-        ctx.save();
-        ctx.globalAlpha = nA;
-        ctx.fillStyle = C.gray;
-        ctx.font = "13px Arial, sans-serif";
-        ctx.textAlign = "left";
-        ctx.textBaseline = "middle";
-        ctx.fillText(`• ${note}`, panelX + 26, ny + 15);
-        ctx.restore();
-      });
-    }
+    // Zone legend below grid
+    const legendA = prog(t, 16, 17) * (1 - prog(t, 16.8, 17.5));
+    const zones = [
+      {label:"🍅 Tomato",   bg:"#bbf7d0", color:"#16a34a"},
+      {label:"🌿 Herbs",    bg:"#d1fae5", color:"#059669"},
+      {label:"🥕 Root Veg", bg:"#fef9c3", color:"#ca8a04"},
+      {label:"🌶️ Pepper",  bg:"#fee2e2", color:"#dc2626"},
+      {label:"🌸 Flowers",  bg:"#fce7f3", color:"#db2777"},
+    ];
+    const legY = gy + gridH + 28;
+    const legW = 170;
+    zones.forEach((z, i) => {
+      const lx = gx + i * (legW + 8);
+      ctx.save(); ctx.globalAlpha = legendA;
+      rr(ctx, lx, legY, legW, 46, 10, z.bg);
+      ctx.fillStyle = z.color; ctx.font = 'bold 17px "Arial",sans-serif';
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(z.label, lx + legW/2, legY + 23);
+      ctx.restore();
+    });
   }
 
-  // ── Scene 4: CTA (15.5-18s) ──────────────────────────────────────────────
-  if (t >= 15.5) {
-    const ctaA = prog(t, 15.5, 16.8);
+  // ── Scene 5: CTA 17-18s ────────────────────────────────────────────────────
+  if (t >= 16.8) {
+    const ctaA = prog(t, 16.8, 17.6);
+    ctx.fillStyle = `rgba(30,81,40,${ctaA})`;
+    ctx.fillRect(0, 0, V1W, V1H);
 
-    // Bottom bar
-    rr(ctx, 0, H - 100, W, 100, 0, C.green);
-    ctx.save();
-    ctx.globalAlpha = ctaA;
-    text(ctx, "✨  Generated in seconds  •  30 plants  •  8 companion pairings  •  Zone 7b", W/2, H-64, 22, C.white, "sans", "center");
-    text(ctx, "plantersblueprint.com", W/2, H-28, 18, C.harvestLt, "sans", "center");
+    em(ctx, "🌱", V1W/2, V1H/2 - 170, 130, ctaA);
+    txt(ctx, "Start planning for free", V1W/2, V1H/2 - 20, 56, C.white, true,  "center", ctaA);
+    txt(ctx, "No credit card required", V1W/2, V1H/2 + 52, 26, C.mintDark, false, "center", ctaA);
+
+    // CTA badge
+    const badgeW = 700, badgeH = 84, badgeX = (V1W-badgeW)/2;
+    ctx.save(); ctx.globalAlpha = ctaA;
+    ctx.shadowColor = "rgba(0,0,0,0.3)"; ctx.shadowBlur = 24;
+    rr(ctx, badgeX, V1H/2 + 110, badgeW, badgeH, 42, C.harvest);
     ctx.restore();
+    txt(ctx, "plantersblueprint.com", V1W/2, V1H/2 + 152, 32, C.green, true, "center", ctaA);
   }
 }
 
-// ─── VIDEO 2: Features Showcase ───────────────────────────────────────────────
-const WIZARD_STEPS = [
-  { icon:"📍", q:"What's your USDA zone?",      a:"Zone 7b — Maryland" },
-  { icon:"📐", q:"How big is your garden?",      a:"12 × 10 ft" },
-  { icon:"☀️", q:"How much sun does it get?",    a:"Full sun (6+ hrs)" },
-  { icon:"🌱", q:"What plants do you want?",     a:"Tomatoes, herbs, peppers…" },
-  { icon:"🎯", q:"What are your goals?",         a:"High yield + pollinators" },
+// ─── VIDEO 2  (1280 × 720, 16:9 landscape) ───────────────────────────────────
+const V2W = 1280, V2H = 720;
+
+const CALENDAR = [
+  {month:"Jan",tasks:["Order seeds","Plan layout"],col:"#e0f2fe"},
+  {month:"Feb",tasks:["Start peppers indoors","Prep beds"],col:"#e0f2fe"},
+  {month:"Mar",tasks:["Sow tomatoes","Direct sow greens"],col:"#d1fae5"},
+  {month:"Apr",tasks:["Harden off seedlings","Plant cool crops"],col:"#d1fae5"},
+  {month:"May",tasks:["Transplant tomatoes","Direct sow beans"],col:"#bbf7d0"},
+  {month:"Jun",tasks:["First harvest","Side-dress compost"],col:"#fef9c3"},
+  {month:"Jul",tasks:["Deep watering","Succession planting"],col:"#fde68a"},
+  {month:"Aug",tasks:["Peak harvest","Save seeds"],col:"#fde68a"},
+  {month:"Sep",tasks:["Plant fall crops","Collect herbs"],col:"#fed7aa"},
+  {month:"Oct",tasks:["Clear beds","Plant garlic"],col:"#fee2e2"},
+  {month:"Nov",tasks:["Mulch beds","Review season"],col:"#e0f2fe"},
+  {month:"Dec",tasks:["Plan next year","Clean tools"],col:"#e0f2fe"},
 ];
 
-const CALENDAR_MONTHS = [
-  { month:"Jan", tasks:["Order seeds","Plan layout"] },
-  { month:"Feb", tasks:["Start peppers indoors","Prep beds"] },
-  { month:"Mar", tasks:["Sow tomatoes indoors","Direct sow greens"] },
-  { month:"Apr", tasks:["Harden off seedlings","Plant cool crops"] },
-  { month:"May", tasks:["Transplant tomatoes","Direct sow beans"] },
-  { month:"Jun", tasks:["First harvest","Side-dress with compost"] },
-  { month:"Jul", tasks:["Deep watering","Succession planting"] },
-  { month:"Aug", tasks:["Peak harvest","Save seeds"] },
-  { month:"Sep", tasks:["Plant fall crops","Collect herbs"] },
-  { month:"Oct", tasks:["Clear beds","Plant garlic"] },
-  { month:"Nov", tasks:["Mulch beds","Review season"] },
-  { month:"Dec", tasks:["Plan next year","Clean tools"] },
+const V2_WIZARD = [
+  {icon:"📍",q:"What's your USDA zone?",a:"Zone 7b — Maryland"},
+  {icon:"📐",q:"How big is your garden?",a:"12 × 10 ft"},
+  {icon:"☀️",q:"How much sun does it get?",a:"Full sun (6+ hrs)"},
+  {icon:"🌱",q:"What plants do you want?",a:"Tomatoes, herbs, peppers…"},
+  {icon:"🎯",q:"What are your goals?",a:"High yield + pollinators"},
 ];
-
-const SEASON_COLORS: Record<string,string> = {
-  Jan:"#e0f2fe", Feb:"#e0f2fe", Mar:"#d1fae5", Apr:"#d1fae5",
-  May:"#bbf7d0", Jun:"#fef9c3", Jul:"#fde68a", Aug:"#fde68a",
-  Sep:"#fed7aa", Oct:"#fee2e2", Nov:"#e0f2fe", Dec:"#e0f2fe",
-};
 
 const FEATURES = [
-  { icon:"🤖", label:"AI-Powered Design" },
-  { icon:"🗺️", label:"Interactive Garden Map" },
-  { icon:"🌡️", label:"All 26 USDA Zones" },
-  { icon:"📅", label:"12-Month Care Calendar" },
-  { icon:"🌿", label:"Companion Planting Science" },
-  { icon:"💾", label:"Save Multiple Designs" },
+  {icon:"🤖",label:"AI-Powered Design"},
+  {icon:"🗺️",label:"Interactive Garden Map"},
+  {icon:"🌡️",label:"All 26 USDA Zones"},
+  {icon:"📅",label:"12-Month Care Calendar"},
+  {icon:"🌿",label:"Companion Planting Science"},
+  {icon:"💾",label:"Save Multiple Designs"},
 ];
 
 function drawVideo2(ctx: CanvasRenderingContext2D, t: number) {
-  ctx.clearRect(0, 0, W, H);
+  ctx.clearRect(0, 0, V2W, V2H);
 
-  // ── Scene 1: Intro (0-3s) ────────────────────────────────────────────────
-  const introOut = 1 - prog(t, 2.5, 3.2);
+  // ── Intro 0-3s ─────────────────────────────────────────────────────────────
   if (t < 3.2) {
-    const bg = ctx.createLinearGradient(0, 0, W, H);
-    bg.addColorStop(0, "#1e5128");
-    bg.addColorStop(1, C.greenMid);
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
-
-    ctx.save();
-    ctx.globalAlpha = 0.08;
-    ctx.fillStyle = C.white;
-    ctx.beginPath(); ctx.arc(950, 100, 250, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(150, 600, 200, 0, Math.PI*2); ctx.fill();
+    const bg = ctx.createLinearGradient(0, 0, V2W, V2H);
+    bg.addColorStop(0, "#1e5128"); bg.addColorStop(1, C.greenMid);
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, V2W, V2H);
+    ctx.save(); ctx.globalAlpha = 0.08; ctx.fillStyle = C.white;
+    ctx.beginPath(); ctx.arc(200, 150, 180, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(1100, 580, 220, 0, Math.PI*2); ctx.fill();
     ctx.restore();
 
-    const logoA = prog(t, 0, 1) * introOut;
-    emoji(ctx, "🌱", W/2, H/2 - 80, 100, logoA);
-    text(ctx, "Planters Blueprint", W/2, H/2 + 20, 72, C.white, "serif", "center", logoA);
-    text(ctx, "Everything your garden needs to thrive", W/2, H/2 + 90, 32, C.mintDark, "sans", "center", logoA * prog(t, 0.6, 1.6));
+    const out = 1 - prog(t, 2.5, 3.2);
+    const scl = lerp(0.2, 1, easeOut(prog(t, 0, 1.2)));
+    ctx.save(); ctx.translate(V2W/2, V2H/2 - 60); ctx.scale(scl,scl);
+    em(ctx, "🌱", 0, 0, 100, out); ctx.restore();
+    txt(ctx, "Planters Blueprint", V2W/2, V2H/2+30, 68, C.white, true, "center", out * prog(t, 0.4, 1.4));
+    txt(ctx, "Everything your garden needs to thrive", V2W/2, V2H/2+95, 28, C.mintDark, false, "center", out * prog(t, 0.8, 1.8));
   }
 
-  // ── Scene 2: Wizard Questions (3-8.5s) ──────────────────────────────────
+  // ── Wizard 3-8.5s ──────────────────────────────────────────────────────────
   if (t >= 2.8 && t < 10) {
-    ctx.fillStyle = C.mint;
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = C.mint; ctx.fillRect(0, 0, V2W, V2H);
+    const ta = prog(t, 3, 4) * (1-prog(t, 8.8, 9.5));
+    txt(ctx, "10 personalized questions", V2W/2, 50, 28, C.green, true, "center", ta);
+    txt(ctx, "Tailored to your exact conditions", V2W/2, 86, 18, C.gray, false, "center", ta);
 
-    const titleA = prog(t, 3.0, 4.0);
-    text(ctx, "10 personalized questions", W/2, 54, 30, C.green, "serif", "center", titleA);
-    text(ctx, "We tailor the design to your exact conditions", W/2, 92, 20, C.gray, "sans", "center", titleA * prog(t, 3.3, 4.3));
-
-    const stepW = W - 160, stepH = 80;
-    const stepX = 80;
-
-    WIZARD_STEPS.forEach((step, i) => {
-      const sA = prog(t, 3.5 + i*0.55, 4.5 + i*0.55) * (1 - prog(t, 8.8, 9.5));
+    V2_WIZARD.forEach((step, i) => {
+      const sA = prog(t, 3.5+i*0.5, 4.5+i*0.5) * (1-prog(t, 8.8, 9.5));
       if (sA <= 0) return;
-
-      const sy = 130 + i * (stepH + 14);
-      const slideX = lerp(W + 60, stepX, easeOut(prog(t, 3.5 + i*0.55, 4.2 + i*0.55)));
-
-      ctx.save();
-      ctx.globalAlpha = sA;
-      ctx.shadowColor = "rgba(0,0,0,0.08)";
-      ctx.shadowBlur = 16;
-      rr(ctx, slideX, sy, stepW, stepH, 14, C.white);
-      ctx.restore();
-
-      ctx.save();
-      ctx.globalAlpha = sA;
-      // Icon badge
-      rr(ctx, slideX + 12, sy + 14, 52, 52, 10, C.mintDark);
-      emoji(ctx, step.icon, slideX + 38, sy + 40, 28);
-
-      ctx.fillStyle = C.green;
-      ctx.font = 'bold 18px "Arial", sans-serif';
-      ctx.textAlign = "left";
-      ctx.textBaseline = "middle";
-      ctx.fillText(step.q, slideX + 76, sy + 28);
-
-      ctx.fillStyle = C.gray;
-      ctx.font = '15px "Arial", sans-serif';
-      ctx.fillText(`→ ${step.a}`, slideX + 76, sy + 55);
+      const sy = 118 + i * 98;
+      const sx = lerp(V2W+60, 80, easeOut(prog(t, 3.5+i*0.5, 4.2+i*0.5)));
+      ctx.save(); ctx.globalAlpha = sA; ctx.shadowColor = "rgba(0,0,0,0.08)"; ctx.shadowBlur = 14;
+      rr(ctx, sx, sy, V2W-160, 82, 14, C.white); ctx.restore();
+      ctx.save(); ctx.globalAlpha = sA;
+      rr(ctx, sx+12, sy+13, 56, 56, 10, C.mintDark);
+      em(ctx, step.icon, sx+40, sy+41, 28);
+      ctx.fillStyle = C.green; ctx.font = 'bold 17px "Arial",sans-serif';
+      ctx.textAlign = "left"; ctx.textBaseline = "middle";
+      ctx.fillText(step.q, sx+78, sy+30);
+      ctx.fillStyle = C.gray; ctx.font = '14px "Arial",sans-serif';
+      ctx.fillText(`→ ${step.a}`, sx+78, sy+56);
       ctx.restore();
     });
   }
 
-  // ── Scene 3: Care Calendar (9-16s) ───────────────────────────────────────
+  // ── Calendar 9-16s ─────────────────────────────────────────────────────────
   if (t >= 8.8) {
-    const sceneA = prog(t, 8.8, 9.8);
+    ctx.fillStyle = lerpHex(C.mint, C.white, prog(t, 8.8, 10));
+    ctx.fillRect(0, 0, V2W, V2H);
+    txt(ctx, "12-Month Care Calendar", V2W/2, 48, 30, C.green, true, "center", prog(t, 8.8, 9.8));
+    txt(ctx, "Month-by-month tasks for your zone and plants", V2W/2, 82, 18, C.gray, false, "center", prog(t, 8.8, 9.8));
 
-    ctx.fillStyle = lerpColor(C.mint, C.white, prog(t, 8.8, 10));
-    ctx.fillRect(0, 0, W, H);
-
-    const titleA = sceneA;
-    text(ctx, "12-Month Care Calendar", W/2, 54, 32, C.green, "serif", "center", titleA);
-    text(ctx, "Month-by-month tasks tailored to your zone and plants", W/2, 92, 20, C.gray, "sans", "center", titleA);
-
-    const cols = 6, colW = (W - 80) / cols, rowH = 116;
-    const startX = 40, startY = 120;
-
-    CALENDAR_MONTHS.forEach((m, i) => {
-      const col = i % cols, row = Math.floor(i / cols);
-      const mx = startX + col * colW;
-      const my = startY + row * (rowH + 10);
-      const mA = prog(t, 9.2 + i * 0.22, 10.2 + i * 0.22) * (1 - prog(t, 16.5, 17.2));
-
+    const cols = 6, cW = (V2W-80)/cols, rH = 110;
+    CALENDAR.forEach((m, i) => {
+      const col = i%cols, row = Math.floor(i/cols);
+      const mx = 40+col*cW, my = 102+row*(rH+8);
+      const mA = prog(t, 9.2+i*0.2, 10.2+i*0.2) * (1-prog(t, 16.2, 16.8));
       if (mA <= 0) return;
-
-      const bg = SEASON_COLORS[m.month] ?? C.mintDark;
-
-      ctx.save();
-      ctx.globalAlpha = mA;
-      ctx.shadowColor = "rgba(0,0,0,0.07)";
-      ctx.shadowBlur = 10;
-      rr(ctx, mx + 4, my, colW - 8, rowH, 12, bg);
-      ctx.restore();
-
-      ctx.save();
-      ctx.globalAlpha = mA;
-      ctx.fillStyle = C.green;
-      ctx.font = 'bold 16px "Arial", sans-serif';
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(m.month, mx + colW/2, my + 18);
-
-      ctx.fillStyle = C.gray;
-      ctx.font = '12px "Arial", sans-serif';
-      ctx.textAlign = "left";
-      m.tasks.forEach((task, ti) => {
-        ctx.fillText(`• ${task}`, mx + 12, my + 42 + ti * 22);
-      });
+      ctx.save(); ctx.globalAlpha = mA; ctx.shadowColor = "rgba(0,0,0,0.07)"; ctx.shadowBlur = 8;
+      rr(ctx, mx+3, my, cW-6, rH, 10, m.col); ctx.restore();
+      ctx.save(); ctx.globalAlpha = mA;
+      ctx.fillStyle = C.green; ctx.font = 'bold 15px "Arial",sans-serif';
+      ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(m.month, mx+cW/2, my+16);
+      ctx.fillStyle = C.gray; ctx.font = '11px "Arial",sans-serif'; ctx.textAlign = "left";
+      m.tasks.forEach((task, ti) => ctx.fillText(`• ${task}`, mx+10, my+38+ti*22));
       ctx.restore();
     });
+  }
 
-    // ── Scene 4: Feature pills + CTA (15.5-18s) ──────────────────────────
-    if (t >= 15.5) {
-      const ctaA = prog(t, 15.5, 16.5);
-
-      // Dark overlay
-      ctx.fillStyle = `rgba(45,106,53,${ctaA * 0.92})`;
-      ctx.fillRect(0, 0, W, H);
-
-      text(ctx, "Everything you need to grow", W/2, H/2 - 140, 48, C.white, "serif", "center", ctaA);
-
-      const pillW = 280, pillH = 62;
-      const pillCols = 3;
-      const totalPillW = pillCols * pillW + (pillCols-1) * 20;
-      const pillStartX = (W - totalPillW) / 2;
-
-      FEATURES.forEach((f, i) => {
-        const col = i % pillCols, row = Math.floor(i / pillCols);
-        const px = pillStartX + col * (pillW + 20);
-        const py = H/2 - 65 + row * (pillH + 14);
-        const fA = ctaA * prog(t, 15.7 + i*0.1, 16.5 + i*0.1);
-
-        ctx.save();
-        ctx.globalAlpha = fA;
-        ctx.shadowColor = "rgba(0,0,0,0.25)";
-        ctx.shadowBlur = 12;
-        rr(ctx, px, py, pillW, pillH, 14, "rgba(255,255,255,0.15)");
-        ctx.restore();
-
-        ctx.save();
-        ctx.globalAlpha = fA;
-        emoji(ctx, f.icon, px + 36, py + pillH/2, 26);
-        ctx.fillStyle = C.white;
-        ctx.font = 'bold 17px "Arial", sans-serif';
-        ctx.textAlign = "left";
-        ctx.textBaseline = "middle";
-        ctx.fillText(f.label, px + 62, py + pillH/2);
-        ctx.restore();
-      });
-
-      rr(ctx, W/2 - 220, H/2 + 160, 440, 64, 32, C.harvest, undefined, 0);
-      text(ctx, "🌱  Start free at plantersblueprint.com", W/2, H/2 + 192, 22, C.green, "sans", "center", ctaA * prog(t, 16.2, 17));
-    }
+  // ── Features + CTA 15.5-18s ────────────────────────────────────────────────
+  if (t >= 15.5) {
+    const a = prog(t, 15.5, 16.5);
+    ctx.fillStyle = `rgba(30,81,40,${a*0.94})`; ctx.fillRect(0,0,V2W,V2H);
+    txt(ctx, "Everything you need to grow", V2W/2, V2H/2-140, 44, C.white, true, "center", a);
+    const pW=280,pH=58,pCols=3,totW=pCols*(pW+16)-16,pSX=(V2W-totW)/2;
+    FEATURES.forEach((f,i)=>{
+      const col=i%pCols,row=Math.floor(i/pCols);
+      const px=pSX+col*(pW+16),py=V2H/2-70+row*(pH+12);
+      const fA=a*prog(t,15.7+i*0.1,16.5+i*0.1);
+      ctx.save(); ctx.globalAlpha=fA; ctx.shadowColor="rgba(0,0,0,0.22)"; ctx.shadowBlur=10;
+      rr(ctx,px,py,pW,pH,12,"rgba(255,255,255,0.13)"); ctx.restore();
+      ctx.save(); ctx.globalAlpha=fA;
+      em(ctx,f.icon,px+34,py+pH/2,24);
+      ctx.fillStyle=C.white; ctx.font='bold 15px "Arial",sans-serif';
+      ctx.textAlign="left"; ctx.textBaseline="middle";
+      ctx.fillText(f.label,px+60,py+pH/2); ctx.restore();
+    });
+    rr(ctx,(V2W-420)/2,V2H/2+162,420,58,29,C.harvest);
+    txt(ctx,"🌱  Start free at plantersblueprint.com",V2W/2,V2H/2+191,20,C.green,false,"center",a*prog(t,16.2,17));
   }
 }
 
-// ─── Recorder hook ────────────────────────────────────────────────────────────
-type Status = "idle" | "recording" | "done";
+// ─── MP4 recorder hook ────────────────────────────────────────────────────────
+type Status = "idle"|"recording"|"done"|"error";
 
-function useVideoRecorder(canvasRef: React.RefObject<HTMLCanvasElement | null>, drawFn: (ctx: CanvasRenderingContext2D, t: number) => void) {
+interface VideoConfig { W: number; H: number; duration: number; fps: number }
+
+function useMP4Recorder(
+  canvasRef: React.RefObject<HTMLCanvasElement | null>,
+  drawFn: (ctx: CanvasRenderingContext2D, t: number) => void,
+  cfg: VideoConfig
+) {
   const [status, setStatus] = useState<Status>("idle");
-  const [progress, setProgress] = useState(0);
-  const [url, setUrl] = useState<string | null>(null);
+  const [pct, setPct] = useState(0);
+  const [url, setUrl] = useState<string|null>(null);
+  const [fmt, setFmt] = useState<"mp4"|"webm">("mp4");
   const rafRef = useRef<number>(0);
 
-  const start = useCallback(() => {
+  const start = useCallback(async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    setStatus("recording");
-    setProgress(0);
-    setUrl(null);
+    setStatus("recording"); setPct(0); setUrl(null);
+    const { fps, duration, W, H } = cfg;
+    const TOTAL_FRAMES = fps * duration;
 
-    const fps = 30;
+    // ── Try VideoEncoder + mp4-muxer ─────────────────────────────────────────
+    if (typeof VideoEncoder !== "undefined") {
+      try {
+        const { Muxer, ArrayBufferTarget } = await import("mp4-muxer");
+        const muxer = new Muxer({
+          target: new ArrayBufferTarget(),
+          video: { codec: "avc", width: W, height: H },
+          fastStart: "in-memory",
+        });
+
+        const encoder = new VideoEncoder({
+          output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+          error: (e) => { console.error(e); setStatus("error"); },
+        });
+
+        const codecStr = "avc1.640034"; // H.264 High Profile Level 5.2
+        const supported = await VideoEncoder.isConfigSupported({ codec: codecStr, width: W, height: H, framerate: fps });
+        encoder.configure({
+          codec: supported.supported ? codecStr : "avc1.42001E",
+          width: W, height: H,
+          bitrate: 10_000_000,
+          framerate: fps,
+        });
+
+        setFmt("mp4");
+        let frameIdx = 0;
+
+        const tick = () => {
+          if (frameIdx >= TOTAL_FRAMES) {
+            encoder.flush().then(() => {
+              muxer.finalize();
+              const blob = new Blob([(muxer.target as InstanceType<typeof ArrayBufferTarget>).buffer], { type: "video/mp4" });
+              setUrl(URL.createObjectURL(blob));
+              setStatus("done");
+            });
+            return;
+          }
+          const t = frameIdx / fps;
+          drawFn(ctx, t);
+
+          const timestamp = Math.round(frameIdx * 1_000_000 / fps);
+          const frame = new VideoFrame(canvas, { timestamp, duration: Math.round(1_000_000 / fps) });
+          encoder.encode(frame, { keyFrame: frameIdx % (fps * 2) === 0 });
+          frame.close();
+          frameIdx++;
+          setPct(frameIdx / TOTAL_FRAMES);
+          rafRef.current = requestAnimationFrame(tick);
+        };
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      } catch (err) {
+        console.warn("VideoEncoder failed, falling back to WebM:", err);
+      }
+    }
+
+    // ── Fallback: MediaRecorder WebM ─────────────────────────────────────────
+    setFmt("webm");
     const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
-      ? "video/webm;codecs=vp9"
-      : "video/webm";
-
+      ? "video/webm;codecs=vp9" : "video/webm";
     const stream = canvas.captureStream(fps);
     const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 8_000_000 });
     const chunks: Blob[] = [];
-
     recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
     recorder.onstop = () => {
-      const blob = new Blob(chunks, { type: "video/webm" });
-      setUrl(URL.createObjectURL(blob));
+      setUrl(URL.createObjectURL(new Blob(chunks, { type: "video/webm" })));
       setStatus("done");
     };
-
     recorder.start();
-    const startTime = performance.now();
-
-    const tick = () => {
-      const elapsed = (performance.now() - startTime) / 1000;
-      const t = Math.min(elapsed, DURATION);
-      drawFn(ctx, t);
-      setProgress(t / DURATION);
-
-      if (t < DURATION) {
-        rafRef.current = requestAnimationFrame(tick);
-      } else {
-        recorder.stop();
-      }
+    const t0 = performance.now();
+    const tick2 = () => {
+      const elapsed = (performance.now() - t0) / 1000;
+      drawFn(ctx, Math.min(elapsed, duration));
+      setPct(elapsed / duration);
+      if (elapsed < duration) { rafRef.current = requestAnimationFrame(tick2); }
+      else { recorder.stop(); }
     };
-    rafRef.current = requestAnimationFrame(tick);
-  }, [canvasRef, drawFn]);
+    rafRef.current = requestAnimationFrame(tick2);
+  }, [canvasRef, drawFn, cfg]);
 
-  return { status, progress, url, start };
+  return { status, pct, url, fmt, start };
 }
 
-// ─── VideoCard component ──────────────────────────────────────────────────────
-function VideoCard({ title, desc, drawFn, filename }: {
-  title: string;
-  desc: string;
+// ─── VideoCard ────────────────────────────────────────────────────────────────
+function VideoCard({ title, desc, drawFn, cfg, filename }: {
+  title: string; desc: string;
   drawFn: (ctx: CanvasRenderingContext2D, t: number) => void;
-  filename: string;
+  cfg: VideoConfig; filename: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { status, progress, url, start } = useVideoRecorder(canvasRef, drawFn);
+  const { status, pct, url, fmt, start } = useMP4Recorder(canvasRef, drawFn, cfg);
+
+  const ext = fmt === "mp4" ? "mp4" : "webm";
+  const dlName = filename.replace(/\.\w+$/, `.${ext}`);
+
+  // Portrait canvas needs different preview height
+  const isPortrait = cfg.H > cfg.W;
+  const previewStyle = isPortrait
+    ? { width: "auto", height: 480, display: "block", margin: "0 auto" }
+    : { width: "100%", display: "block" };
 
   return (
     <div className="card flex flex-col gap-4">
       <div>
         <h2 className="font-serif font-bold text-xl text-gray-900">{title}</h2>
         <p className="text-sm text-gray-500 mt-1">{desc}</p>
+        <p className="text-xs text-gray-400 mt-0.5">{cfg.W} × {cfg.H} px · {cfg.duration}s · {cfg.fps}fps</p>
       </div>
 
-      {/* Preview canvas — rendered at 50% scale */}
-      <div className="rounded-xl overflow-hidden border border-gray-200 bg-gray-100" style={{ lineHeight: 0 }}>
-        <canvas
-          ref={canvasRef}
-          width={W}
-          height={H}
-          style={{ width: "100%", display: "block" }}
-        />
+      <div className="rounded-xl overflow-hidden border border-gray-200 bg-gray-100 flex justify-center">
+        <canvas ref={canvasRef} width={cfg.W} height={cfg.H} style={previewStyle} />
       </div>
 
-      {/* Progress bar */}
       {status === "recording" && (
         <div className="w-full bg-gray-100 rounded-full h-2">
-          <div
-            className="bg-primary h-2 rounded-full transition-all"
-            style={{ width: `${Math.round(progress * 100)}%` }}
-          />
+          <div className="bg-primary h-2 rounded-full transition-all" style={{ width: `${Math.round(pct*100)}%` }} />
         </div>
       )}
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <button
           onClick={start}
           disabled={status === "recording"}
           className="px-5 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 disabled:opacity-50 transition-colors text-sm"
         >
-          {status === "idle" ? "▶ Record Video" : status === "recording" ? `Recording… ${Math.round(progress*100)}%` : "▶ Re-record"}
+          {status === "idle" ? "▶ Record Video"
+            : status === "recording" ? `Encoding… ${Math.round(pct*100)}%`
+            : "▶ Re-record"}
         </button>
 
         {url && (
-          <a
-            href={url}
-            download={filename}
-            className="px-5 py-2.5 bg-harvest text-primary font-semibold rounded-xl hover:bg-harvest/90 transition-colors text-sm"
-          >
-            ⬇ Download WebM
+          <a href={url} download={dlName}
+            className="px-5 py-2.5 bg-harvest text-primary font-semibold rounded-xl hover:bg-harvest/90 transition-colors text-sm">
+            ⬇ Download {fmt.toUpperCase()}
           </a>
         )}
       </div>
 
       {status === "idle" && (
-        <p className="text-xs text-gray-400">Click Record — the animation renders in real time (~{DURATION}s) then saves as a downloadable video.</p>
+        <p className="text-xs text-gray-400">
+          Click Record — encodes all {cfg.fps*cfg.duration} frames then offers a download.
+          Outputs MP4 (H.264) in Chrome/Edge, WebM in older browsers.
+        </p>
       )}
       {status === "done" && (
-        <p className="text-xs text-gray-400">Ready! Click Download to save the {DURATION}-second WebM video (1280×720).</p>
+        <p className="text-xs text-gray-400">
+          ✓ {cfg.duration}s {fmt.toUpperCase()} ready. {fmt === "webm" && "Convert to MP4 at cloudconvert.com if needed."}
+        </p>
       )}
     </div>
   );
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
+const V1_CFG: VideoConfig = { W: V1W, H: V1H, duration: 18, fps: 30 };
+const V2_CFG: VideoConfig = { W: V2W, H: V2H, duration: 18, fps: 30 };
+
 export default function PromoVideosPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <div className="mb-10 text-center">
           <h1 className="text-3xl font-serif font-bold text-gray-900 mb-2">Promo Videos</h1>
-          <p className="text-gray-500">Click <strong>Record Video</strong> on each card — it renders the 18-second animation live, then gives you a download link.</p>
+          <p className="text-gray-500 text-sm">Click <strong>Record Video</strong> — the animation encodes frame-by-frame then gives you a download link.</p>
         </div>
 
         <div className="flex flex-col gap-10">
           <VideoCard
-            title="Video 1 — AI Garden Designer"
-            desc="Shows the AI generating a companion-planting garden layout, with zones and planting notes. Best for top-of-funnel ads."
+            title="Video 1 — AI Garden Designer (Instagram 4:5)"
+            desc="Portrait format for Instagram feed and Facebook ads. Shows the wizard flow, AI processing, garden reveal, and CTA."
             drawFn={drawVideo1}
-            filename="planters-blueprint-garden-designer.webm"
+            cfg={V1_CFG}
+            filename="planters-blueprint-ai-designer.mp4"
           />
           <VideoCard
-            title="Video 2 — Full Feature Showcase"
-            desc="Walks through the wizard questions, care calendar, and complete feature set. Best for remarketing and feature highlights."
+            title="Video 2 — Full Feature Showcase (16:9 Landscape)"
+            desc="Widescreen format for YouTube, Facebook, and Twitter. Walks through wizard questions, 12-month care calendar, and features."
             drawFn={drawVideo2}
-            filename="planters-blueprint-features.webm"
+            cfg={V2_CFG}
+            filename="planters-blueprint-features.mp4"
           />
         </div>
-
-        <p className="text-center text-xs text-gray-400 mt-10">
-          Videos export as WebM (VP9). Convert to MP4 with Handbrake or CloudConvert for broader compatibility.
-        </p>
       </div>
     </div>
   );
