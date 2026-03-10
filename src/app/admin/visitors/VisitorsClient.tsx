@@ -21,6 +21,7 @@ export interface SessionSummary {
   userName: string | null;
   userEmail: string | null;
   userPlan: string | null;
+  userIsAdmin: boolean;
   pages: { id: string; createdAt: string; path: string }[];
 }
 
@@ -34,8 +35,13 @@ export function VisitorsClient({ sessions }: { sessions: SessionSummary[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [filterAdmins, setFilterAdmins] = useState(true);
 
   const refresh = () => startTransition(() => router.refresh());
+
+  const visibleSessions = filterAdmins
+    ? sessions.filter((s) => !s.userIsAdmin)
+    : sessions;
 
   const toggle = (id: string) =>
     setExpanded((prev) => {
@@ -47,21 +53,32 @@ export function VisitorsClient({ sessions }: { sessions: SessionSummary[] }) {
   return (
     <div>
       {/* Header with refresh button */}
-      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-4 flex-wrap">
         <h2 className="font-semibold text-gray-800">
           Sessions
           <span className="ml-2 text-xs font-normal text-gray-400">
-            (last 5 days · click a row to see pages visited)
+            ({visibleSessions.length} shown · click a row to see pages visited)
           </span>
         </h2>
-        <button
-          onClick={refresh}
-          disabled={isPending}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
-        >
-          <span className={isPending ? "animate-spin inline-block" : ""}>↻</span>
-          {isPending ? "Refreshing…" : "Refresh"}
-        </button>
+        <div className="flex items-center gap-4">
+          <label className="flex items-center gap-2 cursor-pointer select-none text-sm text-gray-600">
+            <input
+              type="checkbox"
+              checked={filterAdmins}
+              onChange={(e) => setFilterAdmins(e.target.checked)}
+              className="rounded border-gray-300 text-primary focus:ring-primary"
+            />
+            Filter out admin sessions
+          </label>
+          <button
+            onClick={refresh}
+            disabled={isPending}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
+          >
+            <span className={isPending ? "animate-spin inline-block" : ""}>↻</span>
+            {isPending ? "Refreshing…" : "Refresh"}
+          </button>
+        </div>
       </div>
 
     <div className="overflow-x-auto">
@@ -80,7 +97,7 @@ export function VisitorsClient({ sessions }: { sessions: SessionSummary[] }) {
           </tr>
         </thead>
         <tbody>
-          {sessions.map((s) => {
+          {visibleSessions.map((s) => {
             const isOpen = expanded.has(s.sessionId);
             return (
               <>
@@ -207,7 +224,7 @@ export function VisitorsClient({ sessions }: { sessions: SessionSummary[] }) {
               </>
             );
           })}
-          {sessions.length === 0 && (
+          {visibleSessions.length === 0 && (
             <tr>
               <td colSpan={9} className="px-4 py-12 text-center text-gray-400">
                 No sessions recorded yet.

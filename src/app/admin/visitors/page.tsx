@@ -10,7 +10,7 @@ export default async function AdminVisitorsPage() {
   const visits = await prisma.siteVisit.findMany({
     orderBy: { createdAt: "asc" },
     include: {
-      user: { select: { id: true, name: true, email: true, plan: true } },
+      user: { select: { id: true, name: true, email: true, plan: true, isAdmin: true } },
     },
   });
 
@@ -56,6 +56,7 @@ export default async function AdminVisitorsPage() {
         userName:      user?.name ?? null,
         userEmail:     user?.email ?? null,
         userPlan:      user?.plan ?? null,
+        userIsAdmin:   user?.isAdmin ?? false,
         pages: pages.map((p) => ({
           id:        p.id,
           createdAt: p.createdAt.toISOString(),
