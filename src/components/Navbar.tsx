@@ -8,12 +8,14 @@ export async function Navbar() {
   const session = await auth();
 
   let gardensFull = false;
+  let userPlan = "seedling";
   if (session?.user?.id) {
     const [gardenCount, dbUser] = await Promise.all([
       prisma.garden.count({ where: { userId: session.user.id } }),
       prisma.user.findUnique({ where: { id: session.user.id }, select: { plan: true } }),
     ]);
-    const planConfig = getPlanConfig(dbUser?.plan ?? "seedling");
+    userPlan = dbUser?.plan ?? "seedling";
+    const planConfig = getPlanConfig(userPlan);
     gardensFull = gardenCount >= planConfig.maxGardens;
   }
 
@@ -33,6 +35,14 @@ export async function Navbar() {
         <div className="flex items-center gap-3">
           {session?.user ? (
             <>
+              {userPlan !== "harvest" && (
+                <Link
+                  href="/pricing"
+                  className="px-4 py-1.5 bg-harvest text-primary text-sm font-bold rounded-lg hover:bg-harvest/90 transition-colors"
+                >
+                  ⬆ Upgrade
+                </Link>
+              )}
               <NavDropdown
                 userName={session.user.name}
                 userImage={session.user.image}
@@ -47,7 +57,7 @@ export async function Navbar() {
                 href="/pricing"
                 className="text-sm font-medium text-gray-700 hover:text-primary transition-colors"
               >
-                Pricing
+                Subscription
               </Link>
               <Link
                 href="/auth/signin"

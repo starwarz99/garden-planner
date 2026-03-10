@@ -84,7 +84,7 @@ export function NavDropdown({ userName, userImage, isAdmin, gardensFull, signOut
             </Link>
             <Link href="/pricing" onClick={() => setOpen(false)}
               className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors">
-              <span>✨</span> Pricing
+              <span>✨</span> Subscription
             </Link>
             {isAdmin && (
               <Link href="/admin" onClick={() => setOpen(false)}
