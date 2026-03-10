@@ -35,6 +35,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           >
             Site Map
           </Link>
+          <Link
+            href="/promo-videos"
+            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary border-b-2 border-transparent hover:border-primary transition-colors"
+          >
+            Promo Videos
+          </Link>
+          <Link
+            href="/icon-download"
+            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary border-b-2 border-transparent hover:border-primary transition-colors"
+          >
+            Assets
+          </Link>
         </nav>
       </div>
       {children}

@@ -595,6 +595,287 @@ function drawVideo3(ctx: CanvasRenderingContext2D, t: number) {
   }
 }
 
+// ─── VIDEO 4  (1080 × 1350, wizard walkthrough) ───────────────────────────────
+const V4_GRID: { em: string; bg: string }[][] = [
+  [{em:"🍅",bg:"#bbf7d0"},{em:"🍅",bg:"#bbf7d0"},{em:"🍅",bg:"#bbf7d0"},{em:"🌿",bg:"#d1fae5"},{em:"🌿",bg:"#d1fae5"},{em:"🌿",bg:"#d1fae5"}],
+  [{em:"🍅",bg:"#bbf7d0"},{em:"🍅",bg:"#bbf7d0"},{em:"🌱",bg:"#d1fae5"},{em:"🌱",bg:"#d1fae5"},{em:"🌿",bg:"#d1fae5"},{em:"🌿",bg:"#d1fae5"}],
+  [{em:"🌶️",bg:"#fee2e2"},{em:"🌶️",bg:"#fee2e2"},{em:"🥕",bg:"#fef9c3"},{em:"🥕",bg:"#fef9c3"},{em:"🌻",bg:"#fce7f3"},{em:"🌻",bg:"#fce7f3"}],
+  [{em:"🌶️",bg:"#fee2e2"},{em:"🌶️",bg:"#fee2e2"},{em:"🥕",bg:"#fef9c3"},{em:"🥕",bg:"#fef9c3"},{em:"🌸",bg:"#fce7f3"},{em:"🌸",bg:"#fce7f3"}],
+  [{em:"🥦",bg:"#bbf7d0"},{em:"🥦",bg:"#bbf7d0"},{em:"🧅",bg:"#fef9c3"},{em:"🧅",bg:"#fef9c3"},{em:"🌸",bg:"#fce7f3"},{em:"🌸",bg:"#fce7f3"}],
+  [{em:"🥦",bg:"#bbf7d0"},{em:"🥦",bg:"#bbf7d0"},{em:"🥒",bg:"#d1fae5"},{em:"🥒",bg:"#d1fae5"},{em:"🌼",bg:"#fef9c3"},{em:"🌼",bg:"#fef9c3"}],
+];
+const V4_ORDER = V4_GRID.flatMap((row,r)=>row.map((_,c)=>[r,c] as [number,number]));
+
+function drawV4Card(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, step: number, a: number) {
+  ctx.save(); ctx.globalAlpha = a;
+  ctx.shadowColor = "rgba(0,0,0,0.10)"; ctx.shadowBlur = 26;
+  rr(ctx, x, y, w, h, 28, C.white); ctx.shadowBlur = 0;
+  const dotY = y + 46, dotSp = (w - 80) / 9;
+  for (let i = 0; i < 10; i++) {
+    ctx.beginPath(); ctx.arc(x + 40 + i * dotSp, dotY, i === step - 1 ? 9 : 5, 0, Math.PI*2);
+    ctx.fillStyle = i < step ? C.green : "#e5e7eb"; ctx.fill();
+  }
+  rr(ctx, x+40, dotY+18, w-80, 3, 2, "#e5e7eb");
+  rr(ctx, x+40, dotY+18, (w-80)*(step/10), 3, 2, C.green);
+  ctx.restore();
+}
+
+function drawVideo4(ctx: CanvasRenderingContext2D, t: number) {
+  const W = V1W, H = V1H;
+  ctx.clearRect(0, 0, W, H);
+
+  // ── Mint background (scenes 2 onward) ────────────────────────────────────
+  if (t >= 3.0) { ctx.fillStyle = "#f0fdf4"; ctx.fillRect(0, 0, W, H); }
+
+  // ── Scene 1: Title 0-3.5s ─────────────────────────────────────────────────
+  if (t < 3.8) {
+    const bg = ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,"#1a4721"); bg.addColorStop(1,C.greenMid);
+    ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+    const fo = 1 - prog(t,2.8,3.6), ip = easeOut(prog(t,0,1.0));
+    ctx.save(); ctx.translate(W/2,H/2-180); ctx.scale(lerp(0.2,1,ip),lerp(0.2,1,ip));
+    em(ctx,"🌱",0,0,180,fo); ctx.restore();
+    txt(ctx,"Planters Blueprint",W/2,H/2-30,76,C.white,true,"center",fo*prog(t,0.3,1.2));
+    txt(ctx,"See how easy it is to build",W/2,H/2+88,36,"rgba(255,255,255,0.80)",false,"center",fo*prog(t,0.8,1.8));
+    txt(ctx,"your perfect garden",W/2,H/2+138,36,C.harvestLt,false,"center",fo*prog(t,1.0,2.0));
+  }
+
+  // ── Scene 2: Step 1 – Dimensions 3.0-9.5s ────────────────────────────────
+  if (t >= 3.0 && t < 9.8) {
+    const ip=progOut(t,3.0,4.0), op=prog(t,8.8,9.5);
+    const tx=lerp(W+60,0,ip)-lerp(0,W+60,op), a=Math.min(ip,1-op);
+    const cX=80, cY=145, cW=W-160, cH=955;
+    ctx.save(); ctx.translate(tx,0);
+    drawV4Card(ctx,cX,cY,cW,cH,1,a);
+    ctx.save(); ctx.globalAlpha=a;
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillStyle=C.gray;    ctx.font='20px "Arial",sans-serif'; ctx.fillText("Step 1 of 10",W/2,cY+100);
+    ctx.fillStyle=C.green;   ctx.font='bold 50px "Georgia",serif'; ctx.fillText("How big is your garden?",W/2,cY+178);
+    ctx.fillStyle=C.gray;    ctx.font='26px "Arial",sans-serif'; ctx.fillText("Enter your dimensions in feet",W/2,cY+234);
+    const iW=(cW-120)/2, iX1=cX+40, iX2=cX+40+iW+40, iY=cY+290;
+    const typed=Math.round(12*easeOut(prog(t,4.2,5.8)));
+    [[iX1,"Width"],[iX2,"Length"]].forEach(([ix,lb])=>{
+      ctx.fillStyle="#374151"; ctx.textAlign="left"; ctx.font='bold 24px "Arial",sans-serif';
+      ctx.fillText(String(lb),Number(ix),iY);
+      const active=typed===12;
+      rr(ctx,Number(ix),iY+28,iW,74,14,C.white,active?C.green:"#d1d5db",active?3:2);
+      if(typed>0){ ctx.fillStyle=C.green; ctx.textAlign="center"; ctx.font='bold 44px "Arial",sans-serif'; ctx.fillText(String(typed),Number(ix)+iW/2,iY+65); }
+    });
+    const btnY=iY+130;
+    ctx.fillStyle=C.gray; ctx.textAlign="left"; ctx.font='22px "Arial",sans-serif';
+    ctx.globalAlpha=a*0.65; ctx.fillText("Quick select:",iX1,btnY); ctx.globalAlpha=a;
+    [8,12,16,20].forEach((sz,i)=>{
+      const bx=iX1+i*210, active=sz===12&&typed===12;
+      rr(ctx,bx,btnY+22,190,52,10,active?C.green:"#f9fafb",active?C.green:"#d1d5db",2);
+      ctx.fillStyle=active?C.white:C.gray; ctx.textAlign="center"; ctx.font='24px "Arial",sans-serif';
+      ctx.fillText(`${sz} ft`,bx+95,btnY+48);
+    });
+    const prevA=prog(t,5.8,6.8); ctx.globalAlpha=a*prevA;
+    const pY=btnY+106;
+    rr(ctx,cX+40,pY,cW-80,264,20,C.mint);
+    ctx.fillStyle=C.green; ctx.textAlign="center"; ctx.font='bold 52px "Georgia",serif'; ctx.fillText("144 sq ft",W/2,pY+52);
+    ctx.fillStyle=C.gray; ctx.font='24px "Arial",sans-serif'; ctx.fillText("12 × 12 ft  ·  6 × 6 grid cells",W/2,pY+108);
+    rr(ctx,W/2-60,pY+128,120,120,10,"#bbf7d0",C.green,2);
+    em(ctx,"🌱",W/2,pY+188,50,prevA); ctx.globalAlpha=a;
+    ctx.globalAlpha=a*prog(t,7.2,7.8);
+    rr(ctx,W/2-200,cY+cH-80,400,64,16,C.green);
+    ctx.fillStyle=C.white; ctx.textAlign="center"; ctx.font='bold 30px "Arial",sans-serif'; ctx.fillText("Next →",W/2,cY+cH-48);
+    ctx.restore(); ctx.restore();
+  }
+
+  // ── Scene 3: Step 2 – USDA Zone 9.0-14.8s ────────────────────────────────
+  if (t >= 9.0 && t < 15.0) {
+    const ip=progOut(t,9.0,10.0), op=prog(t,14.2,14.9);
+    const tx=lerp(W+60,0,ip)-lerp(0,W+60,op), a=Math.min(ip,1-op);
+    const cX=80, cY=130, cW=W-160, cH=1050;
+    ctx.save(); ctx.translate(tx,0);
+    drawV4Card(ctx,cX,cY,cW,cH,2,a);
+    ctx.save(); ctx.globalAlpha=a;
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillStyle=C.gray;  ctx.font='20px "Arial",sans-serif'; ctx.fillText("Step 2 of 10",W/2,cY+100);
+    ctx.fillStyle=C.green; ctx.font='bold 50px "Georgia",serif'; ctx.fillText("What's your USDA Zone?",W/2,cY+168);
+    ctx.fillStyle=C.gray;  ctx.font='26px "Arial",sans-serif'; ctx.fillText("We'll pick plants that survive your winters",W/2,cY+226);
+    const zones=["3a","3b","4a","4b","5a","5b","6a","6b","7a","7b","8a","8b","9a","9b","10a","10b"];
+    const zCols=4, zBW=(cW-120-60)/zCols, sel=t>11.5?"6b":"";
+    zones.forEach((z,i)=>{
+      const col=i%zCols, row=Math.floor(i/zCols), bx=cX+40+col*(zBW+20), by=cY+278+row*88;
+      const isSel=z===sel, zA=progOut(t,9.8+i*0.06,9.8+i*0.06+0.4);
+      ctx.save(); ctx.globalAlpha=a*zA;
+      rr(ctx,bx,by,zBW,68,12,isSel?C.green:"#f9fafb",isSel?C.green:"#e5e7eb",2);
+      ctx.fillStyle=isSel?C.white:"#374151"; ctx.textAlign="center"; ctx.font='24px "Arial",sans-serif'; ctx.fillText(`Zone ${z}`,bx+zBW/2,by+34);
+      ctx.restore();
+    });
+    ctx.globalAlpha=a*prog(t,12.2,12.8);
+    rr(ctx,W/2-200,cY+cH-80,400,64,16,C.green);
+    ctx.fillStyle=C.white; ctx.textAlign="center"; ctx.font='bold 30px "Arial",sans-serif'; ctx.fillText("Next →",W/2,cY+cH-48);
+    ctx.restore(); ctx.restore();
+  }
+
+  // ── Scene 4: Fast selections (soil, sun, experience) 14.5-20.8s ──────────
+  const qSteps=[
+    {step:3,icon:"🌍",q:"What's your soil type?",   opts:["Sandy","Loamy","Clay","Silty"],          sel:"Loamy"},
+    {step:5,icon:"☀️",q:"How much sun do you get?", opts:["Full Sun","Partial Sun","Full Shade","Mixed"], sel:"Full Sun"},
+    {step:6,icon:"🌱",q:"Your experience level?",   opts:["Beginner","Intermediate","Expert","Mixed Garden"], sel:"Beginner"},
+  ];
+  if (t >= 14.5 && t < 21.0) {
+    qSteps.forEach((qs,si)=>{
+      const ss=14.5+si*2.1, se=ss+2.5;
+      if(t<ss-0.1||t>se+0.1) return;
+      const ip=progOut(t,ss,ss+0.6), op=prog(t,se-0.4,se+0.1);
+      const tx=lerp(W+60,0,ip)-lerp(0,W+60,op), a=Math.min(ip,1-op);
+      const cX=80, cY=185, cW=W-160, cH=820;
+      ctx.save(); ctx.translate(tx,0);
+      drawV4Card(ctx,cX,cY,cW,cH,qs.step,a);
+      ctx.save(); ctx.globalAlpha=a;
+      ctx.textAlign="center"; ctx.textBaseline="middle";
+      ctx.fillStyle=C.gray;  ctx.font='20px "Arial",sans-serif'; ctx.fillText(`Step ${qs.step} of 10`,W/2,cY+100);
+      em(ctx,qs.icon,W/2,cY+190,70,a);
+      ctx.fillStyle=C.green; ctx.font='bold 48px "Georgia",serif'; ctx.fillText(qs.q,W/2,cY+290);
+      const optW=(cW-120)/2;
+      qs.opts.forEach((opt,oi)=>{
+        const col=oi%2, row=Math.floor(oi/2), bx=cX+40+col*(optW+40), by=cY+360+row*112;
+        const isSel=opt===qs.sel&&t>ss+1.0;
+        rr(ctx,bx,by,optW,90,14,isSel?C.green:"#f9fafb",isSel?C.green:"#e5e7eb",2);
+        ctx.fillStyle=isSel?C.white:"#374151"; ctx.textAlign="center"; ctx.font='28px "Arial",sans-serif'; ctx.fillText(opt,bx+optW/2,by+45);
+      });
+      ctx.globalAlpha=a*prog(t,ss+1.5,ss+2.0);
+      rr(ctx,W/2-180,cY+cH-76,360,58,14,C.green);
+      ctx.fillStyle=C.white; ctx.textAlign="center"; ctx.font='bold 28px "Arial",sans-serif'; ctx.fillText("Next →",W/2,cY+cH-47);
+      ctx.restore(); ctx.restore();
+    });
+  }
+
+  // ── Scene 5: Plant picker 20.5-26.5s ─────────────────────────────────────
+  if (t >= 20.5 && t < 26.8) {
+    const ip=progOut(t,20.5,21.5), op=prog(t,26.0,26.7);
+    const tx=lerp(W+60,0,ip)-lerp(0,W+60,op), a=Math.min(ip,1-op);
+    const cX=80, cY=105, cW=W-160, cH=1090;
+    ctx.save(); ctx.translate(tx,0);
+    drawV4Card(ctx,cX,cY,cW,cH,9,a);
+    ctx.save(); ctx.globalAlpha=a;
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillStyle=C.gray;  ctx.font='20px "Arial",sans-serif'; ctx.fillText("Step 9 of 10",W/2,cY+100);
+    ctx.fillStyle=C.green; ctx.font='bold 48px "Georgia",serif'; ctx.fillText("Which plants do you want?",W/2,cY+164);
+    ctx.fillStyle=C.gray;  ctx.font='24px "Arial",sans-serif'; ctx.fillText("Tap to add • tap again to remove",W/2,cY+222);
+    const plants5=[
+      {em:"🍅",n:"Tomatoes"},{em:"🌶️",n:"Peppers"},{em:"🌿",n:"Basil"},
+      {em:"🥕",n:"Carrots"}, {em:"🥒",n:"Zucchini"},{em:"🌻",n:"Sunflowers"},
+      {em:"🥦",n:"Broccoli"},{em:"🧅",n:"Onions"},  {em:"🌸",n:"Flowers"},
+      {em:"🥬",n:"Lettuce"}, {em:"🌾",n:"Herbs"},   {em:"🍓",n:"Berries"},
+    ];
+    const cols=3, chipW=(cW-120)/cols, chipH=102;
+    plants5.forEach((p,i)=>{
+      const col=i%cols, row=Math.floor(i/cols);
+      const bx=cX+40+col*(chipW+20), by=cY+268+row*(chipH+14);
+      const isSel=i<6&&t>21.8+i*0.5;
+      const pA=progOut(t,21.2+i*0.04,21.2+i*0.04+0.3);
+      ctx.save(); ctx.globalAlpha=a*pA;
+      rr(ctx,bx,by,chipW,chipH,14,isSel?C.mintDark:"#f9fafb",isSel?C.green:"#e5e7eb",isSel?3:1);
+      em(ctx,p.em,bx+42,by+chipH/2,36,1);
+      ctx.fillStyle=isSel?C.green:"#374151"; ctx.textAlign="center"; ctx.font='22px "Arial",sans-serif';
+      ctx.fillText(p.n,bx+chipW/2+18,by+chipH/2);
+      if(isSel){ rr(ctx,bx+chipW-34,by+8,26,26,13,C.green); ctx.fillStyle=C.white; ctx.textAlign="center"; ctx.font='bold 16px "Arial",sans-serif'; ctx.fillText("✓",bx+chipW-21,by+21); }
+      ctx.restore();
+    });
+    ctx.globalAlpha=a*prog(t,25.0,25.6);
+    rr(ctx,W/2-200,cY+cH-82,400,64,16,C.green);
+    ctx.fillStyle=C.white; ctx.textAlign="center"; ctx.font='bold 30px "Arial",sans-serif'; ctx.fillText("Next →",W/2,cY+cH-50);
+    ctx.restore(); ctx.restore();
+  }
+
+  // ── Scene 6: Review + Generate 26.0-30.5s ────────────────────────────────
+  if (t >= 26.0 && t < 31.0) {
+    const ip=progOut(t,26.0,27.0), op=prog(t,30.2,30.9);
+    const tx=lerp(W+60,0,ip)-lerp(0,W+60,op), a=Math.min(ip,1-op);
+    const cX=80, cY=152, cW=W-160, cH=900;
+    ctx.save(); ctx.translate(tx,0);
+    drawV4Card(ctx,cX,cY,cW,cH,10,a);
+    ctx.save(); ctx.globalAlpha=a;
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillStyle=C.gray;  ctx.font='20px "Arial",sans-serif'; ctx.fillText("Step 10 of 10",W/2,cY+100);
+    ctx.fillStyle=C.green; ctx.font='bold 52px "Georgia",serif'; ctx.fillText("Review & Generate",W/2,cY+168);
+    const rows6=[
+      {icon:"📐",label:"Garden Size",val:"12 × 12 ft"},{icon:"📍",label:"USDA Zone",val:"Zone 6b"},
+      {icon:"🌍",label:"Soil Type",  val:"Loamy"},      {icon:"☀️",label:"Sun",       val:"Full Sun"},
+      {icon:"🌱",label:"Experience", val:"Beginner"},   {icon:"🌿",label:"Plants",    val:"6 plant varieties"},
+    ];
+    rows6.forEach((r,i)=>{
+      const ry=cY+218+i*84, rA=progOut(t,27.0+i*0.1,27.0+i*0.1+0.4);
+      ctx.save(); ctx.globalAlpha=a*rA;
+      rr(ctx,cX+40,ry,cW-80,68,12,"#f9fafb","#e5e7eb",1);
+      em(ctx,r.icon,cX+80,ry+34,28,1);
+      ctx.fillStyle=C.gray; ctx.textAlign="left"; ctx.font='19px "Arial",sans-serif'; ctx.fillText(r.label,cX+118,ry+20);
+      ctx.fillStyle="#111827"; ctx.font='bold 24px "Arial",sans-serif'; ctx.fillText(r.val,cX+118,ry+48);
+      ctx.restore();
+    });
+    const bp=prog(t,28.8,29.6), pulse=1+Math.sin(t*4)*0.018*bp;
+    ctx.save(); ctx.globalAlpha=a*bp; ctx.translate(W/2,cY+cH-66); ctx.scale(pulse,pulse);
+    rr(ctx,-230,-34,460,68,18,C.harvest);
+    ctx.fillStyle=C.green; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.font='bold 32px "Georgia",serif';
+    ctx.fillText("🌻  Generate My Garden",0,0);
+    ctx.restore(); ctx.restore(); ctx.restore();
+  }
+
+  // ── Scene 7: AI generating 30.0-34.2s ────────────────────────────────────
+  if (t >= 30.0 && t < 34.5) {
+    const fi=prog(t,30.0,31.0), fo=1-prog(t,33.2,34.2);
+    const a=Math.min(fi,fo);
+    ctx.fillStyle=`rgba(26,71,33,${a*0.97})`; ctx.fillRect(0,0,W,H);
+    em(ctx,"🤖",W/2,H/2-100,120,a);
+    txt(ctx,"AI is designing",W/2,H/2+32,50,C.white,true,"center",a);
+    txt(ctx,"your garden…",W/2,H/2+96,50,C.white,true,"center",a);
+    const barW=640,barH=14,barX=(W-barW)/2,barY=H/2+158;
+    rr(ctx,barX,barY,barW,barH,7,"rgba(255,255,255,0.15)");
+    const fp=prog(t,30.4,33.0);
+    rr(ctx,barX,barY,barW*fp,barH,7,C.harvest);
+    txt(ctx,`${Math.round(fp*100)}%`,W/2,barY+34,24,"rgba(255,255,255,0.55)",false,"center",a);
+    ["🍅","🌿","🥕","🌻","🌶️","🌸","🥦","🥒"].forEach((p,i)=>{
+      const ang=t*0.85+i*(Math.PI*2/8);
+      em(ctx,p,W/2+Math.cos(ang)*300,H/2-10+Math.sin(ang)*130,38,a*0.4);
+    });
+  }
+
+  // ── Scene 8: Garden reveal 33.5-38.0s ────────────────────────────────────
+  if (t >= 33.5) {
+    const sa=prog(t,33.5,34.5);
+    ctx.save(); ctx.globalAlpha=sa; ctx.fillStyle=C.mint; ctx.fillRect(0,0,W,H); ctx.restore();
+    txt(ctx,"Your garden is ready! 🎉",W/2,78,44,C.green,true,"center",sa);
+    txt(ctx,"AI-designed · Zone 6b · 12×12 ft · 6 varieties",W/2,138,22,C.gray,false,"center",sa*prog(t,34.0,34.8));
+    const COLS=6,ROWS=6,CELL=122,gridW=COLS*CELL,gx=(W-gridW)/2,gy=172;
+    ctx.save(); ctx.globalAlpha=sa; ctx.shadowColor="rgba(0,0,0,0.09)"; ctx.shadowBlur=26;
+    rr(ctx,gx-18,gy-18,gridW+36,ROWS*CELL+36,18,C.white); ctx.restore();
+    V4_ORDER.forEach(([r,c],idx)=>{
+      const cA=prog(t,34.8+idx*0.04,34.8+idx*0.04+0.35);
+      if(cA<=0) return;
+      const cell=V4_GRID[r][c], cx=gx+c*CELL, cy=gy+r*CELL;
+      ctx.save(); ctx.globalAlpha=cA;
+      ctx.fillStyle=cell.bg; ctx.fillRect(cx+1,cy+1,CELL-2,CELL-2); ctx.restore();
+      em(ctx,cell.em,cx+CELL/2,cy+CELL/2,52,cA);
+    });
+    ctx.save(); ctx.globalAlpha=sa*0.22; ctx.strokeStyle="#9ca3af"; ctx.lineWidth=1;
+    for(let c=0;c<=COLS;c++){ctx.beginPath();ctx.moveTo(gx+c*CELL,gy);ctx.lineTo(gx+c*CELL,gy+ROWS*CELL);ctx.stroke();}
+    for(let r=0;r<=ROWS;r++){ctx.beginPath();ctx.moveTo(gx,gy+r*CELL);ctx.lineTo(gx+gridW,gy+r*CELL);ctx.stroke();}
+    ctx.restore();
+    const legY=gy+ROWS*CELL+44, legA=prog(t,36.4,37.2);
+    const legItems=[
+      {em:"🍅",n:"Tomatoes",bg:"#bbf7d0"},{em:"🌶️",n:"Peppers",bg:"#fee2e2"},{em:"🌿",n:"Basil",bg:"#d1fae5"},
+      {em:"🥕",n:"Carrots",bg:"#fef9c3"}, {em:"🥦",n:"Broccoli",bg:"#bbf7d0"},{em:"🌸",n:"Flowers",bg:"#fce7f3"},
+    ];
+    const legW=(W-120)/3;
+    legItems.forEach((item,i)=>{
+      const col=i%3, row=Math.floor(i/3), lx=60+col*(legW+20), ly=legY+row*66;
+      const itemA=legA*progOut(t,36.4+i*0.08,37.4);
+      ctx.save(); ctx.globalAlpha=itemA;
+      rr(ctx,lx,ly,legW,56,10,item.bg);
+      em(ctx,item.em,lx+34,ly+28,26,1);
+      ctx.fillStyle="#374151"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.font='22px "Arial",sans-serif';
+      ctx.fillText(item.n,lx+legW/2+18,ly+28);
+      ctx.restore();
+    });
+    txt(ctx,"Try free at PlantersBlueprint.com",W/2,legY+148,36,C.green,true,"center",prog(t,37.8,38.0)*sa);
+  }
+}
+
 // ─── MP4 recorder hook ────────────────────────────────────────────────────────
 type Status = "idle"|"recording"|"done"|"error";
 
@@ -777,6 +1058,7 @@ function VideoCard({ title, desc, drawFn, cfg, filename }: {
 const V1_CFG: VideoConfig = { W: V1W, H: V1H, duration: 18, fps: 30 };
 const V2_CFG: VideoConfig = { W: V2W, H: V2H, duration: 18, fps: 30 };
 const V3_CFG: VideoConfig = { W: V1W, H: V1H, duration: 30, fps: 30 };
+const V4_CFG: VideoConfig = { W: V1W, H: V1H, duration: 38, fps: 30 };
 
 export default function PromoVideosPage() {
   return (
@@ -808,6 +1090,13 @@ export default function PromoVideosPage() {
             drawFn={drawVideo3}
             cfg={V3_CFG}
             filename="planters-blueprint-gardener-hook.mp4"
+          />
+          <VideoCard
+            title="Video 4 — Wizard Walkthrough (Instagram 4:5)"
+            desc="Step-by-step walkthrough of the garden builder wizard — dimensions, zone, soil, sun, plant picker — then AI generates and reveals the final garden grid."
+            drawFn={drawVideo4}
+            cfg={V4_CFG}
+            filename="planters-blueprint-wizard-walkthrough.mp4"
           />
         </div>
       </div>
