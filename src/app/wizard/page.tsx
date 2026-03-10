@@ -12,6 +12,7 @@ export default async function WizardPage() {
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: {
+        plan: true,
         usdaZone: true,
         soilType: true,
         experience: true,
@@ -24,6 +25,7 @@ export default async function WizardPage() {
 
     if (user) {
       const partial: Partial<WizardData> = {};
+      if ((user.plan ?? "seedling") === "seedling") partial.lengthFt = 12;
       if (user.usdaZone)    partial.usdaZone    = user.usdaZone as WizardData["usdaZone"];
       if (user.soilType)    partial.soilType    = user.soilType as WizardData["soilType"];
       if (user.experience)  partial.experience  = user.experience as WizardData["experience"];
@@ -31,7 +33,7 @@ export default async function WizardPage() {
       if (user.sunExposure) partial.sunExposure = user.sunExposure as WizardData["sunExposure"];
       if (user.orientation) partial.orientation = user.orientation as WizardData["orientation"];
       if (user.goals?.length) partial.goals     = user.goals as WizardData["goals"];
-      if (Object.keys(partial).length > 0) initialData = partial;
+      initialData = partial;
     }
   }
 
