@@ -54,7 +54,7 @@ export async function POST(req: Request) {
         await prisma.user.update({
           where: { id: userId },
           data: {
-            plan: planFromPriceId(priceId) || plan,
+            plan: planFromPriceId(priceId) ?? plan,
             stripeCustomerId: session.customer as string,
             stripeSubscriptionId: subscription.id,
             stripePriceId: priceId,
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
         await prisma.user.update({
           where: { id: userId },
           data: {
-            plan: isActive ? planFromPriceId(priceId) : "seedling",
+            plan: isActive ? (planFromPriceId(priceId) ?? "seedling") : "seedling",
             stripePriceId: priceId,
             stripeCancelAtPeriodEnd: isCancelling,
           },

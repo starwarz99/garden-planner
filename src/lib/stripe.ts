@@ -23,11 +23,11 @@ export const STRIPE_PRICES: Record<"grower" | "harvest", { priceId: string; amou
   },
 };
 
-/** Given a Stripe price ID, return the matching plan name. */
-export function planFromPriceId(priceId: string): string {
-  if (priceId === STRIPE_PRICES.grower.priceId && STRIPE_PRICES.grower.priceId) return "grower";
-  if (priceId === STRIPE_PRICES.harvest.priceId && STRIPE_PRICES.harvest.priceId) return "harvest";
-  return "seedling";
+/** Given a Stripe price ID, return the matching plan name, or null if unrecognised. */
+export function planFromPriceId(priceId: string): "grower" | "harvest" | null {
+  if (priceId && priceId === STRIPE_PRICES.grower.priceId) return "grower";
+  if (priceId && priceId === STRIPE_PRICES.harvest.priceId) return "harvest";
+  return null;
 }
 
 /** Return true when Stripe is fully configured (key + both price IDs are set). */
