@@ -106,8 +106,15 @@ export default function SitemapPage() {
                 <tbody className="divide-y divide-gray-100">
                   {section.pages.map((page) => (
                     <tr key={page.path} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap w-48">
-                        {page.path}
+                      <td className="px-4 py-3 font-mono text-xs whitespace-nowrap w-48">
+                        {page.path.includes("[") ? (
+                          <span className="text-gray-400">{page.path}</span>
+                        ) : (
+                          <Link href={page.path} target="_blank"
+                            className="text-primary hover:underline">
+                            {page.path}
+                          </Link>
+                        )}
                       </td>
                       <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap w-40">
                         <Link
