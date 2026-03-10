@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -16,6 +16,12 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [showPrefs, setShowPrefs] = useState(false);
   const [prefs, setPrefs] = useState<Partial<GardenPrefsInput>>({});
+  const [callbackUrl, setCallbackUrl] = useState("/dashboard");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setCallbackUrl(params.get("callbackUrl") || "/dashboard");
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +48,7 @@ export default function RegisterPage() {
     // Auto sign-in after registration, then hard-redirect so server components re-render
     const result = await signIn("credentials", { email, password, redirect: false });
     if (!result?.error) {
-      window.location.href = "/dashboard";
+      window.location.href = callbackUrl;
     } else {
       setError("Account created but sign-in failed. Please sign in manually.");
       setLoading(false);
@@ -60,7 +66,7 @@ export default function RegisterPage() {
 
         <div className="flex flex-col gap-3 mb-6">
           <button
-            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+            onClick={() => signIn("google", { callbackUrl })}
             className="w-full flex items-center justify-center gap-3 py-3 border-2 border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -73,7 +79,7 @@ export default function RegisterPage() {
           </button>
 
           <button
-            onClick={() => signIn("facebook", { callbackUrl: "/dashboard" })}
+            onClick={() => signIn("facebook", { callbackUrl })}
             className="w-full flex items-center justify-center gap-3 py-3 rounded-xl font-medium text-white transition-colors"
             style={{ backgroundColor: "#1877F2" }}
           >
@@ -228,7 +234,7 @@ export default function RegisterPage() {
 
         <p className="text-center text-sm text-gray-600 mt-6">
           Already have an account?{" "}
-          <Link href="/auth/signin" className="text-primary font-medium hover:underline">
+          <Link href={`/auth/signin${callbackUrl !== "/dashboard" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`} className="text-primary font-medium hover:underline">
             Sign in
           </Link>
         </p>

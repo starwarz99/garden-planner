@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 
@@ -9,6 +9,12 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [callbackUrl, setCallbackUrl] = useState("/dashboard");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setCallbackUrl(params.get("callbackUrl") || "/dashboard");
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,16 +31,16 @@ export default function SignInPage() {
       setError("Invalid email or password");
       setLoading(false);
     } else {
-      window.location.href = "/dashboard";
+      window.location.href = callbackUrl;
     }
   };
 
   const handleGoogle = () => {
-    signIn("google", { callbackUrl: "/dashboard" });
+    signIn("google", { callbackUrl });
   };
 
   const handleFacebook = () => {
-    signIn("facebook", { callbackUrl: "/dashboard" });
+    signIn("facebook", { callbackUrl });
   };
 
   return (
@@ -123,7 +129,7 @@ export default function SignInPage() {
 
         <p className="text-center text-sm text-gray-600 mt-6">
           Don&apos;t have an account?{" "}
-          <Link href="/auth/register" className="text-primary font-medium hover:underline">
+          <Link href={`/auth/register${callbackUrl !== "/dashboard" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`} className="text-primary font-medium hover:underline">
             Create one free
           </Link>
         </p>

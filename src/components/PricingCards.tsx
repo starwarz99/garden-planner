@@ -7,6 +7,7 @@ interface PricingCardsProps {
   currentPlan?: string;
   /** If true, shows compact layout suitable for embedding in account page */
   compact?: boolean;
+  isLoggedIn?: boolean;
 }
 
 const TIERS = [
@@ -70,11 +71,15 @@ const TIERS = [
   },
 ];
 
-export function PricingCards({ currentPlan = "seedling", compact = false }: PricingCardsProps) {
+export function PricingCards({ currentPlan = "seedling", compact = false, isLoggedIn = true }: PricingCardsProps) {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleUpgrade = async (plan: "grower" | "harvest") => {
+    if (!isLoggedIn) {
+      window.location.href = "/auth/signin?callbackUrl=/pricing";
+      return;
+    }
     setLoading(plan);
     setError(null);
     try {

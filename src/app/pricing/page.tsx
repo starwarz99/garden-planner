@@ -21,7 +21,7 @@ export default async function PricingPage() {
           </p>
         </div>
 
-        <PricingCards currentPlan={currentPlan} />
+        <PricingCards currentPlan={currentPlan} isLoggedIn={!!session?.user} />
 
         {/* FAQ */}
         <div className="mt-16 max-w-2xl mx-auto space-y-6">
