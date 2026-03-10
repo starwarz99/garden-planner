@@ -399,208 +399,199 @@ const GOOD_PAIRS = [["🍅","🌿"],["🥕","🧅"],["🥦","🌸"],["🌶️","
 function drawVideo3(ctx: CanvasRenderingContext2D, t: number) {
   ctx.clearRect(0, 0, V1W, V1H);
 
-  // ── Scene 1: Hook 0-5s (holds 2s after animation completes) ──────────────
-  if (t < 5.2) {
+  // ── Scene 1: Hook 0-8s ────────────────────────────────────────────────────
+  if (t < 8.2) {
     const bg = ctx.createLinearGradient(0, 0, 0, V1H);
     bg.addColorStop(0, "#1a4721"); bg.addColorStop(1, C.green);
     ctx.fillStyle = bg; ctx.fillRect(0, 0, V1W, V1H);
 
-    // Subtle grid pattern
     ctx.save(); ctx.globalAlpha = 0.05; ctx.strokeStyle = C.white; ctx.lineWidth = 1;
     for (let x = 0; x < V1W; x += 80) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,V1H); ctx.stroke(); }
     for (let y = 0; y < V1H; y += 80) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(V1W,y); ctx.stroke(); }
     ctx.restore();
 
-    const fadeOut = 1 - prog(t, 4.5, 5.0); // was 2.5-3.0, now holds 2s longer
+    const fadeOut = 1 - prog(t, 7.0, 8.0);
 
     // "Are you a" — slides down from above
-    const line1A = progOut(t, 0.1, 0.7) * fadeOut;
-    const line1Y = lerp(V1H/2 - 200, V1H/2 - 180, easeOut(prog(t, 0.1, 0.7)));
-    txt(ctx, "Are you a", V1W/2, line1Y, 62, "rgba(255,255,255,0.85)", false, "center", line1A);
+    const line1A = progOut(t, 0.1, 0.8) * fadeOut;
+    const line1Y = lerp(V1H/2 - 260, V1H/2 - 240, easeOut(prog(t, 0.1, 0.8)));
+    txt(ctx, "Are you a", V1W/2, line1Y, 88, "rgba(255,255,255,0.85)", false, "center", line1A);
 
     // "gardener?" — scales in with impact
-    const line2P = prog(t, 0.5, 1.1);
-    const line2Scl = lerp(1.6, 1, easeOut(line2P));
+    const line2P = prog(t, 0.6, 1.3);
+    const line2Scl = lerp(1.7, 1, easeOut(line2P));
     const line2A = line2P * fadeOut;
     ctx.save();
-    ctx.translate(V1W/2, V1H/2 - 40);
+    ctx.translate(V1W/2, V1H/2 - 30);
     ctx.scale(line2Scl, line2Scl);
     ctx.globalAlpha = line2A;
     ctx.fillStyle = C.white;
-    ctx.font = `bold 148px "Georgia",serif`;
+    ctx.font = `bold 200px "Georgia",serif`;
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillText("gardener?", 0, 0);
     ctx.restore();
 
     // Underline
-    const ulW = lerp(0, 700, easeOut(prog(t, 1.0, 1.6)));
-    ctx.save(); ctx.globalAlpha = fadeOut * prog(t, 1.0, 1.6);
-    ctx.fillStyle = C.harvest; ctx.fillRect((V1W-ulW)/2, V1H/2 + 62, ulW, 7);
+    const ulW = lerp(0, 960, easeOut(prog(t, 1.2, 2.0)));
+    ctx.save(); ctx.globalAlpha = fadeOut * prog(t, 1.2, 2.0);
+    ctx.fillStyle = C.harvest; ctx.fillRect((V1W-ulW)/2, V1H/2 + 120, ulW, 10);
     ctx.restore();
 
     // "You need this." — slides up from below
-    const line3P = prog(t, 1.2, 1.9);
-    const line3Y = lerp(V1H/2 + 160, V1H/2 + 140, easeOut(line3P));
-    txt(ctx, "You need this.", V1W/2, line3Y, 70, C.harvest, true, "center", line3P * fadeOut);
+    const line3P = prog(t, 1.4, 2.2);
+    const line3Y = lerp(V1H/2 + 240, V1H/2 + 210, easeOut(line3P));
+    txt(ctx, "You need this.", V1W/2, line3Y, 90, C.harvest, true, "center", line3P * fadeOut);
 
     // Floating plant emojis
     ["🌱","🍅","🌿","🥕","🌻","🌶️"].forEach((p, i) => {
-      const angle = (t * 0.4 + i * Math.PI * 2 / 6);
-      const ex = V1W/2 + Math.cos(angle) * (350 + i*12);
-      const ey = V1H/2 - 20 + Math.sin(angle) * 220;
-      em(ctx, p, ex, ey, 34, 0.18 * fadeOut);
+      const angle = (t * 0.35 + i * Math.PI * 2 / 6);
+      const ex = V1W/2 + Math.cos(angle) * (420 + i*14);
+      const ey = V1H/2 - 10 + Math.sin(angle) * 280;
+      em(ctx, p, ex, ey, 46, 0.18 * fadeOut);
     });
   }
 
-  // ── Scene 2: Pain points 4.6-10.5s ───────────────────────────────────────
-  if (t >= 4.6 && t < 10.5) {
-    const bgA = prog(t, 4.6, 5.4);
+  // ── Scene 2: Pain points 7.0-17s ─────────────────────────────────────────
+  if (t >= 7.0 && t < 17.0) {
+    const bgA = prog(t, 7.0, 8.2);
     ctx.fillStyle = lerpHex(C.green, "#fffbeb", bgA);
     ctx.fillRect(0, 0, V1W, V1H);
 
-    const titleA = prog(t, 5.2, 6.0) * (1 - prog(t, 9.8, 10.4));
-    txt(ctx, "Sound familiar?", V1W/2, 110, 52, C.green, true, "center", titleA);
+    const titleA = prog(t, 8.0, 9.2) * (1 - prog(t, 15.8, 16.8));
+    txt(ctx, "Sound familiar?", V1W/2, 140, 74, C.green, true, "center", titleA);
 
-    const cW = 920, cH = 164, cX = (V1W - cW) / 2;
+    const cW = 1020, cH = 230, cX = (V1W - cW) / 2;
 
     PAIN_POINTS.forEach((pt, i) => {
-      const appear = 5.6 + i * 0.85;
-      const slideP = progOut(t, appear, appear + 0.5);
-      const cA = slideP * (1 - prog(t, 9.6, 10.3));
+      const appear = 8.5 + i * 1.2;
+      const slideP = progOut(t, appear, appear + 0.7);
+      const cA = slideP * (1 - prog(t, 15.5, 16.5));
       if (cA <= 0) return;
 
-      const cy = 210 + i * (cH + 18);
+      const cy = 240 + i * (cH + 22);
       const cx = lerp(-cW - 40, cX, easeOut(slideP));
 
       ctx.save(); ctx.globalAlpha = cA;
-      ctx.shadowColor = "rgba(0,0,0,0.1)"; ctx.shadowBlur = 20;
-      rr(ctx, cx, cy, cW, cH, 20, "#fff1f2");
-      // Left accent bar
-      rr(ctx, cx, cy, 10, cH, [20,0,0,20], "#fca5a5");
+      ctx.shadowColor = "rgba(0,0,0,0.12)"; ctx.shadowBlur = 28;
+      rr(ctx, cx, cy, cW, cH, 24, "#fff1f2");
+      rr(ctx, cx, cy, 14, cH, [24,0,0,24], "#fca5a5");
       ctx.restore();
 
       ctx.save(); ctx.globalAlpha = cA;
-      em(ctx, pt.em, cx + 82, cy + cH/2, 62);
+      em(ctx, pt.em, cx + 100, cy + cH/2, 82);
       ctx.fillStyle = "#1f2937"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
-      ctx.font = `bold 30px "Georgia",serif`;
-      ctx.fillText(pt.line1, cx + 148, cy + cH/2 - 22);
-      ctx.font = `28px "Arial",sans-serif`; ctx.fillStyle = C.gray;
-      ctx.fillText(pt.line2, cx + 148, cy + cH/2 + 22);
+      ctx.font = `bold 38px "Georgia",serif`;
+      ctx.fillText(pt.line1, cx + 190, cy + cH/2 - 28);
+      ctx.font = `34px "Arial",sans-serif`; ctx.fillStyle = C.gray;
+      ctx.fillText(pt.line2, cx + 190, cy + cH/2 + 28);
       ctx.restore();
     });
   }
 
-  // ── Scene 3: Solution reveal 9.6-14.5s (holds 2s after checklist) ────────
-  if (t >= 9.6 && t < 14.5) {
-    const inA  = prog(t, 9.6, 10.6);
-    const outA = 1 - prog(t, 13.5, 14.5); // was 10.0-10.5, now holds 2s longer
+  // ── Scene 3: Solution reveal 16-24s ──────────────────────────────────────
+  if (t >= 16.0 && t < 24.0) {
+    const inA  = prog(t, 16.0, 17.2);
+    const outA = 1 - prog(t, 23.0, 24.0);
     const a = Math.min(inA, outA);
 
     ctx.fillStyle = `rgba(26,71,33,${a * 0.97})`;
     ctx.fillRect(0, 0, V1W, V1H);
 
-    // Burst ring
-    const burstR = lerp(0, 500, easeOut(prog(t, 9.6, 10.8)));
-    ctx.save(); ctx.globalAlpha = a * lerp(0.4, 0, prog(t, 10.0, 11.3));
-    ctx.strokeStyle = C.harvest; ctx.lineWidth = 4;
+    const burstR = lerp(0, 620, easeOut(prog(t, 16.0, 17.5)));
+    ctx.save(); ctx.globalAlpha = a * lerp(0.4, 0, prog(t, 16.5, 18.2));
+    ctx.strokeStyle = C.harvest; ctx.lineWidth = 6;
     ctx.beginPath(); ctx.arc(V1W/2, V1H/2, burstR, 0, Math.PI*2); ctx.stroke();
     ctx.restore();
 
-    const logoScl = lerp(0.3, 1, easeOut(prog(t, 9.7, 10.5)));
-    ctx.save(); ctx.translate(V1W/2, V1H/2 - 130); ctx.scale(logoScl, logoScl);
-    em(ctx, "🌱", 0, 0, 140, a); ctx.restore();
+    const logoScl = lerp(0.3, 1, easeOut(prog(t, 16.1, 17.2)));
+    ctx.save(); ctx.translate(V1W/2, V1H/2 - 200); ctx.scale(logoScl, logoScl);
+    em(ctx, "🌱", 0, 0, 220, a); ctx.restore();
 
-    txt(ctx, "Meet Planters Blueprint", V1W/2, V1H/2 + 30, 58, C.white, true, "center", a * prog(t, 10.0, 10.8));
-    txt(ctx, "The AI-powered garden designer", V1W/2, V1H/2 + 104, 30, C.mintDark, false, "center", a * prog(t, 10.3, 11.1));
+    txt(ctx, "Meet Planters Blueprint", V1W/2, V1H/2 + 80, 72, C.white, true, "center", a * prog(t, 16.8, 17.8));
+    txt(ctx, "The AI-powered garden designer", V1W/2, V1H/2 + 172, 38, C.mintDark, false, "center", a * prog(t, 17.2, 18.2));
 
-    // Check list
     ["Designed for your exact zone & soil","Companion planting built in","Free to start — no credit card"].forEach((line, i) => {
-      const lA = a * prog(t, 10.6 + i*0.25, 11.4 + i*0.25);
-      txt(ctx, `✅  ${line}`, V1W/2, V1H/2 + 190 + i*52, 24, C.mintDark, false, "center", lA);
+      const lA = a * prog(t, 17.8 + i*0.4, 18.8 + i*0.4);
+      txt(ctx, `✅  ${line}`, V1W/2, V1H/2 + 290 + i*72, 30, C.mintDark, false, "center", lA);
     });
   }
 
-  // ── Scene 4: Feature grid 14.0-21s ───────────────────────────────────────
-  if (t >= 13.5) {
-    const bgA = prog(t, 13.5, 14.3);
+  // ── Scene 4: Feature grid 23-29s ─────────────────────────────────────────
+  if (t >= 23.0) {
+    const bgA = prog(t, 23.0, 24.2);
     ctx.fillStyle = lerpHex(C.green, C.mint, bgA);
     ctx.fillRect(0, 0, V1W, V1H);
 
-    const titleA = prog(t, 13.8, 14.6) * (1 - prog(t, 20.2, 20.8));
-    txt(ctx, "Here's what you get", V1W/2, 96, 50, C.green, true, "center", titleA);
+    const titleA = prog(t, 23.2, 24.4) * (1 - prog(t, 28.2, 29.0));
+    txt(ctx, "Here's what you get", V1W/2, 106, 64, C.green, true, "center", titleA);
 
-    // 2×2 feature cards
-    const cW = 470, cH = 290, gap = 24;
+    const cW = 506, cH = 340, gap = 22;
     const gridW = cW*2+gap, gridH = cH*2+gap;
-    const gx = (V1W-gridW)/2, gy = 155;
+    const gx = (V1W-gridW)/2, gy = 168;
 
     V3_FEATURES.forEach((f, i) => {
       const col = i%2, row = Math.floor(i/2);
       const cx = gx + col*(cW+gap), cy = gy + row*(cH+gap);
-      const fA = prog(t, 14.2 + i*0.4, 15.0 + i*0.4) * (1-prog(t, 20.0, 20.7));
-      const scl = lerp(0.85, 1, easeOut(prog(t, 14.2+i*0.4, 14.8+i*0.4)));
+      const fA = prog(t, 23.8 + i*0.5, 24.8 + i*0.5) * (1-prog(t, 28.0, 28.8));
+      const scl = lerp(0.85, 1, easeOut(prog(t, 23.8+i*0.5, 24.5+i*0.5)));
       if (fA <= 0) return;
 
       ctx.save(); ctx.globalAlpha = fA;
-      ctx.shadowColor = "rgba(0,0,0,0.1)"; ctx.shadowBlur = 18;
+      ctx.shadowColor = "rgba(0,0,0,0.1)"; ctx.shadowBlur = 22;
       ctx.translate(cx+cW/2, cy+cH/2); ctx.scale(scl, scl); ctx.translate(-(cx+cW/2), -(cy+cH/2));
-      rr(ctx, cx, cy, cW, cH, 20, C.white);
-      rr(ctx, cx, cy, cW, 8, [20,20,0,0], f.fg + "80");
+      rr(ctx, cx, cy, cW, cH, 22, C.white);
+      rr(ctx, cx, cy, cW, 10, [22,22,0,0], f.fg + "80");
       ctx.restore();
 
       ctx.save(); ctx.globalAlpha = fA;
-      // Icon circle
-      rr(ctx, cx+20, cy+24, 80, 80, 18, f.bg);
-      em(ctx, f.icon, cx+60, cy+64, 44);
+      rr(ctx, cx+22, cy+28, 96, 96, 20, f.bg);
+      em(ctx, f.icon, cx+70, cy+76, 52);
 
-      ctx.fillStyle = "#1f2937"; ctx.font = `bold 26px "Georgia",serif`;
+      ctx.fillStyle = "#1f2937"; ctx.font = `bold 30px "Georgia",serif`;
       ctx.textAlign = "left"; ctx.textBaseline = "middle";
-      ctx.fillText(f.title, cx+20, cy+140);
-      ctx.fillStyle = C.gray; ctx.font = `19px "Arial",sans-serif`;
-      ctx.fillText(f.sub, cx+20, cy+180);
+      ctx.fillText(f.title, cx+22, cy+168);
+      ctx.fillStyle = C.gray; ctx.font = `21px "Arial",sans-serif`;
+      ctx.fillText(f.sub, cx+22, cy+212);
 
-      // Mini visual for companion pairing card
       if (i === 1) {
         GOOD_PAIRS.slice(0,3).forEach(([a,b], pi) => {
-          const px = cx+20+pi*130, py = cy+228;
-          rr(ctx, px, py, 116, 44, 10, f.bg);
-          em(ctx, a, px+26, py+22, 22); em(ctx, b, px+54, py+22, 22);
-          ctx.fillStyle = "#16a34a"; ctx.font = `bold 16px "Arial",sans-serif`;
+          const px = cx+22+pi*154, py = cy+262;
+          rr(ctx, px, py, 138, 52, 12, f.bg);
+          em(ctx, a, px+30, py+26, 26); em(ctx, b, px+64, py+26, 26);
+          ctx.fillStyle = "#16a34a"; ctx.font = `bold 20px "Arial",sans-serif`;
           ctx.textAlign = "center"; ctx.textBaseline = "middle";
-          ctx.fillText("✓", px+94, py+22);
+          ctx.fillText("✓", px+114, py+26);
         });
       }
-      // Mini zone badge
       if (i === 2) {
-        rr(ctx, cx+20, cy+218, 180, 54, 12, f.bg);
-        ctx.fillStyle = f.fg; ctx.font = `bold 26px "Georgia",serif`;
-        ctx.textAlign = "center"; ctx.fillText("Zone 7b", cx+110, cy+245);
+        rr(ctx, cx+22, cy+258, 210, 62, 14, f.bg);
+        ctx.fillStyle = f.fg; ctx.font = `bold 30px "Georgia",serif`;
+        ctx.textAlign = "center"; ctx.fillText("Zone 7b", cx+127, cy+289);
       }
       ctx.restore();
     });
 
-    // Companion notes bottom strip
-    const stripA = prog(t, 17.0, 18.0) * (1-prog(t, 20.0, 20.7));
+    const stripA = prog(t, 26.0, 27.0) * (1-prog(t, 28.0, 28.8));
     if (stripA > 0) {
-      rr(ctx, 40, gy+gridH+28, V1W-80, 56, 14, C.green+"22");
-      txt(ctx, "🌱  Free to start  ·  No credit card required  ·  Takes 2 minutes", V1W/2, gy+gridH+56, 22, C.green, false, "center", stripA);
+      rr(ctx, 30, gy+gridH+26, V1W-60, 64, 16, C.green+"22");
+      txt(ctx, "🌱  Free to start  ·  No credit card  ·  Takes 2 minutes", V1W/2, gy+gridH+58, 26, C.green, false, "center", stripA);
     }
   }
 
-  // ── Scene 5: CTA 20-22s ───────────────────────────────────────────────────
-  if (t >= 20.0) {
-    const a = prog(t, 20.0, 21.0);
+  // ── Scene 5: CTA 28-30s ───────────────────────────────────────────────────
+  if (t >= 28.0) {
+    const a = prog(t, 28.0, 29.2);
     const bg = ctx.createLinearGradient(0, 0, 0, V1H);
     bg.addColorStop(0, `rgba(26,71,33,${a})`); bg.addColorStop(1, `rgba(45,106,53,${a})`);
     ctx.fillStyle = bg; ctx.fillRect(0, 0, V1W, V1H);
 
-    const logoP = easeOut(prog(t, 20.1, 20.9));
-    ctx.save(); ctx.translate(V1W/2, V1H/2 - 200); ctx.scale(logoP, logoP);
-    em(ctx, "🌱", 0, 0, 150, a); ctx.restore();
+    const logoP = easeOut(prog(t, 28.1, 29.0));
+    ctx.save(); ctx.translate(V1W/2, V1H/2 - 240); ctx.scale(logoP, logoP);
+    em(ctx, "🌱", 0, 0, 220, a); ctx.restore();
 
-    txt(ctx, "Start your garden today at", V1W/2, V1H/2 - 30, 58, C.white, true, "center", a * prog(t, 20.3, 21.0));
-    txt(ctx, "PlantersBlueprint.com", V1W/2, V1H/2 + 50, 64, C.harvest, true, "center", a * prog(t, 20.4, 21.1));
-    txt(ctx, "Free · AI-powered · Takes 2 minutes", V1W/2, V1H/2 + 130, 26, C.mintDark, false, "center", a * prog(t, 20.5, 21.2));
+    txt(ctx, "Start your garden today at", V1W/2, V1H/2 - 30, 72, C.white, true, "center", a * prog(t, 28.3, 29.2));
+    txt(ctx, "PlantersBlueprint.com", V1W/2, V1H/2 + 80, 88, C.harvest, true, "center", a * prog(t, 28.5, 29.4));
+    txt(ctx, "Free · AI-powered · Takes 2 minutes", V1W/2, V1H/2 + 178, 32, C.mintDark, false, "center", a * prog(t, 28.7, 29.6));
   }
 }
 
@@ -785,7 +776,7 @@ function VideoCard({ title, desc, drawFn, cfg, filename }: {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 const V1_CFG: VideoConfig = { W: V1W, H: V1H, duration: 18, fps: 30 };
 const V2_CFG: VideoConfig = { W: V2W, H: V2H, duration: 18, fps: 30 };
-const V3_CFG: VideoConfig = { W: V1W, H: V1H, duration: 22, fps: 30 };
+const V3_CFG: VideoConfig = { W: V1W, H: V1H, duration: 30, fps: 30 };
 
 export default function PromoVideosPage() {
   return (
