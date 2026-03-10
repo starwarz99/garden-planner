@@ -20,11 +20,45 @@ const inter = Inter({
   display: "swap",
 });
 
+const BASE = "https://www.plantersblueprint.com";
+
 export const metadata: Metadata = {
-  title: "Planters Blueprint — AI-Powered Companion Planting",
+  metadataBase: new URL(BASE),
+  title: {
+    default: "Planters Blueprint — AI Garden Planner",
+    template: "%s | Planters Blueprint",
+  },
   description:
-    "Answer 10 questions and AI designs your perfect personalized garden with companion planting, seasonal care, and zone-specific advice.",
-  keywords: ["garden planner", "companion planting", "AI garden", "USDA zones"],
+    "Answer 10 questions and AI designs your perfect personalized garden with companion planting, seasonal care, and zone-specific advice. Free to start.",
+  keywords: [
+    "garden planner",
+    "companion planting",
+    "AI garden planner",
+    "USDA hardiness zones",
+    "vegetable garden layout",
+    "raised bed planner",
+    "plant spacing",
+    "seasonal care calendar",
+  ],
+  openGraph: {
+    type: "website",
+    siteName: "Planters Blueprint",
+    url: BASE,
+    title: "Planters Blueprint — AI Garden Planner",
+    description:
+      "Answer 10 questions and AI designs your perfect personalized garden with companion planting, seasonal care, and zone-specific advice.",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Planters Blueprint — AI Garden Planner" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Planters Blueprint — AI Garden Planner",
+    description:
+      "Answer 10 questions and AI designs your perfect personalized garden with companion planting, seasonal care, and zone-specific advice.",
+    images: ["/opengraph-image"],
+  },
+  alternates: {
+    canonical: BASE,
+  },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

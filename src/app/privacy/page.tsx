@@ -1,8 +1,9 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Privacy Policy — Planters Blueprint",
-  description: "Privacy Policy for Planters Blueprint garden planning app.",
+  title: "Privacy Policy",
+  description: "Privacy Policy for Planters Blueprint — how we collect, use, and protect your personal information.",
+  alternates: { canonical: "https://www.plantersblueprint.com/privacy" },
 };
 
 export default function PrivacyPage() {

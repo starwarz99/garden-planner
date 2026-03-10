@@ -1,6 +1,52 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: {
+    absolute: "Planters Blueprint — AI Garden Planner & Companion Planting Tool",
+  },
+  description:
+    "Planters Blueprint uses AI to design personalized vegetable garden layouts with companion planting, USDA zone-aware plant selection, and a 12-month care calendar. Free to start.",
+  alternates: {
+    canonical: "https://www.plantersblueprint.com",
+  },
+  openGraph: {
+    title: "Planters Blueprint — AI Garden Planner & Companion Planting Tool",
+    description:
+      "Planters Blueprint uses AI to design personalized vegetable garden layouts with companion planting, USDA zone-aware plant selection, and a 12-month care calendar. Free to start.",
+    url: "https://www.plantersblueprint.com",
+  },
+};
+
+const webAppSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Planters Blueprint",
+  url: "https://www.plantersblueprint.com",
+  description:
+    "AI-powered garden planner with companion planting, USDA zone support, and seasonal care calendars.",
+  applicationCategory: "LifestyleApplication",
+  operatingSystem: "Web",
+  offers: [
+    { "@type": "Offer", name: "Seedling", price: "0", priceCurrency: "USD" },
+    {
+      "@type": "Offer",
+      name: "Grower",
+      price: "5.99",
+      priceCurrency: "USD",
+      description: "Up to 3 gardens, 40×40 ft, regenerate designs",
+    },
+    {
+      "@type": "Offer",
+      name: "Harvest",
+      price: "9.99",
+      priceCurrency: "USD",
+      description: "Up to 5 gardens, 60×60 ft, 12-month care calendar",
+    },
+  ],
+};
 
 const features = [
   {
@@ -53,6 +99,11 @@ export default async function HomePage() {
 
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webAppSchema) }}
+      />
+
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary via-accent to-primary/80 text-white">
         <div className="absolute inset-0 opacity-10 pointer-events-none">

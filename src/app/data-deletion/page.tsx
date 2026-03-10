@@ -1,6 +1,8 @@
 export const metadata = {
-  title: "Data Deletion Instructions — Planters Blueprint",
-  description: "How to request deletion of your Planters Blueprint data.",
+  title: "Data Deletion Instructions",
+  description: "How to request deletion of your Planters Blueprint account and personal data.",
+  alternates: { canonical: "https://www.plantersblueprint.com/data-deletion" },
+  robots: { index: false },
 };
 
 export default function DataDeletionPage() {

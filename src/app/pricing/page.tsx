@@ -1,8 +1,67 @@
+import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { PricingCards } from "@/components/PricingCards";
 import Link from "next/link";
 
-export const metadata = { title: "Pricing — Planters Blueprint" };
+export const metadata: Metadata = {
+  title: "Subscription Plans",
+  description:
+    "Planters Blueprint plans start free. Upgrade to Grower ($5.99/mo) or Harvest ($9.99/mo) for larger gardens, design regeneration, and a 12-month care calendar.",
+  alternates: { canonical: "https://www.plantersblueprint.com/pricing" },
+  openGraph: {
+    title: "Planters Blueprint Subscription Plans",
+    description:
+      "Start free with the Seedling plan. Upgrade to Grower or Harvest for larger gardens, regeneration, and a full care calendar.",
+    url: "https://www.plantersblueprint.com/pricing",
+  },
+};
+
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "Can I cancel anytime?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes. Cancel from the billing portal at any time. You keep your plan until the end of the billing period, then drop back to Seedling.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What happens to my saved gardens if I downgrade?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Your existing gardens stay safe — you just can't create new ones beyond the Seedling limit until you upgrade again.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Is there a free trial?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "The Seedling plan is free forever, so you can explore the core features with no time limit or credit card required.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Can I switch between Grower and Harvest?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Absolutely. Use the billing portal to upgrade or downgrade at any time. Proration is handled automatically by Stripe.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Why isn't this completely free?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Each garden design is generated in real time by an AI model that analyses your specific zone, soil, sun exposure, plant selections, and layout preferences. That AI processing has a cost per request, which is why fully custom designs require a paid plan. The free Seedling tier lets you experience the core tool before committing.",
+      },
+    },
+  ],
+};
 
 export default async function PricingPage() {
   const session = await auth();
@@ -10,6 +69,10 @@ export default async function PricingPage() {
 
   return (
     <div className="min-h-screen bg-mint/20">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       <div className="max-w-5xl mx-auto px-4 py-16">
         {/* Header */}
         <div className="text-center mb-12">
