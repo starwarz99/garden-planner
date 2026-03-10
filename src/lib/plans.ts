@@ -19,7 +19,7 @@ export const PLANS: Record<Plan, PlanConfig> = {
     emoji: "🌱",
     tagline: "Free forever",
     maxGardens: 1,
-    maxDimension: 20,
+    maxDimension: 12,
     canRegenerate: false,
     canSavePreferences: false,
     canAdjustQuantity: false,

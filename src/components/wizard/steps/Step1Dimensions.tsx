@@ -49,7 +49,15 @@ export function Step1Dimensions({ data, updateData, maxDimension, planName, isTo
             min={4}
             max={cap}
             value={widthStr}
-            onChange={(e) => setWidthStr(e.target.value)}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              if (!isNaN(v) && v > cap) {
+                setWidthStr(String(cap));
+                updateData("widthFt", cap);
+              } else {
+                setWidthStr(e.target.value);
+              }
+            }}
             onBlur={(e) => {
               const clamped = clamp(Number(e.target.value) || 4);
               updateData("widthFt", clamped);
@@ -83,7 +91,15 @@ export function Step1Dimensions({ data, updateData, maxDimension, planName, isTo
             min={4}
             max={cap}
             value={lengthStr}
-            onChange={(e) => setLengthStr(e.target.value)}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              if (!isNaN(v) && v > cap) {
+                setLengthStr(String(cap));
+                updateData("lengthFt", cap);
+              } else {
+                setLengthStr(e.target.value);
+              }
+            }}
             onBlur={(e) => {
               const clamped = clamp(Number(e.target.value) || 4);
               updateData("lengthFt", clamped);

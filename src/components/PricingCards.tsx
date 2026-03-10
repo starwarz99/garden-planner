@@ -19,7 +19,7 @@ const TIERS = [
     tagline: "Start growing",
     features: [
       "1 saved garden",
-      "Gardens up to 20×20 ft",
+      "Gardens up to 12×12 ft",
       "AI-generated layout",
       "Zone-aware plant picker",
       "Companion planting notes",
