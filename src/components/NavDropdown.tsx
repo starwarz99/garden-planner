@@ -74,10 +74,6 @@ export function NavDropdown({ userName, userImage, isAdmin, gardensFull, signOut
                 <span>＋</span> New Garden
               </Link>
             )}
-            <Link href="/dashboard" onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors">
-              <span>🌿</span> My Gardens
-            </Link>
             <Link href="/account" onClick={() => setOpen(false)}
               className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors">
               <span>⚙️</span> My Account

@@ -43,6 +43,12 @@ export async function Navbar() {
                   ⬆ Upgrade
                 </Link>
               )}
+              <Link
+                href="/dashboard"
+                className="px-4 py-1.5 text-sm font-medium text-gray-700 hover:text-primary border border-sage/30 rounded-lg hover:border-primary transition-colors"
+              >
+                🌿 My Gardens
+              </Link>
               <NavDropdown
                 userName={session.user.name}
                 userImage={session.user.image}
