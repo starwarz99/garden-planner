@@ -16,6 +16,7 @@ export default function robots(): MetadataRoute.Robots {
           "/garden/",
           "/promo-videos",
           "/icon-download",
+          "/fb-ads",
         ],
       },
     ],

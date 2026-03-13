@@ -47,6 +47,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           >
             Assets
           </Link>
+          <Link
+            href="/fb-ads"
+            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary border-b-2 border-transparent hover:border-primary transition-colors"
+          >
+            FB Ads
+          </Link>
         </nav>
       </div>
       {children}
